@@ -26,3 +26,11 @@ jobs:
           title: Version ${VERSION}
           description: This release is version ${VERSION}.
           file-path: /root/msx-forth83-${VERSION}.dsk
+
+workflows:
+  workflow:
+    jobs:
+      - build:
+        filters:
+          branches:
+            only: /adventure/
