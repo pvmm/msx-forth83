@@ -1,4 +1,4 @@
-set blk_files [list "forth83/dist/msxbios.blk" "forth83/dist/vt52.blk"]
+set blk_files [list "forth83/dist/msxbios.blk" "forth83/dist/t-sc2.blk" "forth83/dist/adv.blk"]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -93,7 +93,7 @@ proc summarize {} {
 proc save_system {} {
   message "Writing F83MSX.COM..."
   type "SAVE-SYSTEM F83MSX.COM\r"
-  wait_response "SAVE-SYSTEM F83MSX.COM  ok" {bye}
+  wait_response "SAVE-SYSTEM F83MSX.COM  ok" {done}
 }
 
 proc bye {} {
@@ -109,11 +109,14 @@ proc replace_autoexec {} {
 }
 
 proc done {} {
+  set fullspeedwhenloading off
+  set speed 100
   message "Finished!"
-  quit
+  type "TEST-ADV\r"
+  #quit
 }
 
-set renderer none
+#set renderer none
 diskmanipulator create forth.dsk 720k -dos1
 virtual_drive forth.dsk
 diskmanipulator format virtual_drive -dos1

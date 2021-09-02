@@ -1,0 +1,71 @@
+\ adventure game
+
+----
+
+msx also forth definitions
+
+decimal 2 capacity 1- thru
+
+----
+
+HEX
+
+( Store shapes )
+SC2TILE EMPTYTIL 00 C, 00 C, 00 C, 00 C, 00 C, 00 C, 00 C, 00 C,
+SC2TILE TREETOP1 0F C, 3B C, 77 C, 5F C, 7F C, 6F C, 3F C, 18 C,
+SC2TILE TREETOP2 F8 C, FC C, FE C, FE C, E6 C, FE C, FC C, B8 C,
+SC2TILE TREETRU1 03 C, 03 C, 03 C, 03 C, 03 C, 03 C, 0F C, 08 C,
+SC2TILE TREETRU2 B0 C, C0 C, 80 C, 80 C, 80 C, C0 C, 80 C, 80 C,
+
+----
+
+( Store palettes )
+SC2PALETTE EMPTYPAL 11 C, 11 C, 11 C, 11 C, 11 C, 11 C, 11 C, 11 C,
+SC2PALETTE TREEPAL1 21 C, 21 C, 21 C, 21 C, 21 C, 21 C, 21 C, 21 C,
+SC2PALETTE TREEPAL2 61 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C,
+SC2PALETTE TREEPAL3 21 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C,
+
+----
+
+DECIMAL
+
+: SET_TILES
+    0 EMPTYTIL
+    1 TREETOP1
+    2 TREETOP2
+    3 TREETRU1
+    4 TREETRU2 ;
+
+----
+
+: SET_PALS
+    0 EMPTYPAL
+    1 TREEPAL1
+    2 TREEPAL1
+    3 TREEPAL2
+    4 TREEPAL3 ;
+    
+----
+
+: PUT_TREE1 ( row col -- )
+    2DUP 2DUP 2DUP
+    1 ROT ROT PUTTILE         ( 1: TREETOP1 )
+    2 ROT ROT 1+ PUTTILE      ( 2: TREETOP2 )
+    3 ROT 1+ ROT PUTTILE      ( 3: TREETRU1 )
+    4 ROT 1+ ROT 1+ PUTTILE ; ( 4: TREETRU2 )
+    
+----
+
+: WAIT
+    CHGET DROP
+    INITXT ;
+
+----
+
+: TEST-ADV
+    INIGRP
+    0 CLS
+    SET_TILES
+    SET_PALS
+    14 15 PUT_TREE1
+    WAIT ;
