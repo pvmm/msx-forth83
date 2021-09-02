@@ -1,4 +1,4 @@
-set blk_files [list "forth83/dist/msxbios.blk" "forth83/dist/t-sc2.blk" "forth83/dist/adv.blk"]
+set blk_files [list "msxbios.blk" "t-sc2.blk" "adv.blk"]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -111,6 +111,7 @@ proc replace_autoexec {} {
 proc done {} {
   set fullspeedwhenloading off
   set speed 100
+  update
   message "Finished!"
   type "TEST-ADV\r"
   #quit
@@ -120,7 +121,7 @@ proc done {} {
 diskmanipulator create forth.dsk 720k -dos1
 virtual_drive forth.dsk
 diskmanipulator format virtual_drive -dos1
-diskmanipulator import virtual_drive dsk/ [glob -type f forth83/dist/*.blk] forth83/AUTOEXEC.BA2
+diskmanipulator import virtual_drive ../dsk/ [glob -type f dist/*.blk] AUTOEXEC.BA2
 
 machine Sony_HB-F1XV
 diska forth.dsk
