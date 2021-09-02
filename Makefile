@@ -23,6 +23,8 @@ vpath %.c src
 .PHONY : all
 all: $(CONVBLK) $(BLKS)
 
+dsk: $(CONVBLK) $(BLKS)
+	openmsx -machine Sony_HB-F1XV -script compile.tcl
 
 $(DIST_DIR)/%.blk: %.4th
 	cat $< | $(CONVBLK) > $@
