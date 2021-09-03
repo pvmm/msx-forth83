@@ -7,7 +7,13 @@ msx also forth definitions
 decimal 2 capacity 1- thru
 
 ----
+DECIMAL
 
+: FORCLR! ( c -- ) #FORCLR C! ;
+: BAKCLR! ( c -- ) #BAKCLR C! ;
+: BDRCLR! ( c -- ) #BDRCLR C! ;
+
+----
 HEX
 
 ( Store shapes )
@@ -17,6 +23,7 @@ SC2TILE TREETRU1  03 C, 03 C, 03 C, 03 C, 03 C, 03 C, 0F C, 08 C,
 SC2TILE TREETRU2  B0 C, C0 C, 80 C, 80 C, 80 C, C0 C, 80 C, 80 C,
 
 ----
+HEX
 
 ( Store palettes )
 SC2PALETTE TREEPAL1 21 C, 21 C, 21 C, 21 C, 21 C, 21 C, 21 C, 21 C,
@@ -24,7 +31,6 @@ SC2PALETTE TREEPAL2 61 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C,
 SC2PALETTE TREEPAL3 21 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C, 61 C,
 
 ----
-
 DECIMAL
 
 : SET_TILES
@@ -34,6 +40,7 @@ DECIMAL
 	4 TREETRU2 ;
 
 ----
+DECIMAL
 
 : SET_PALS
 	1 TREEPAL1
@@ -42,6 +49,7 @@ DECIMAL
 	4 TREEPAL3 ;
 	
 ----
+DECIMAL
 
 : PUT_TREE1 ( row col -- )
 	2DUP 2DUP 2DUP
@@ -58,13 +66,40 @@ DECIMAL
 	INITXT ;
 
 ----
+DECIMAL
+
+variable pv_FORCLR
+variable pv_BAKCLR
+variable pv_BDRCLR
+
+: SAVE_COLORS ( S -- )
+	#FORCLR @ pv_FORCLR !
+	#BAKCLR @ pv_BAKCLR !
+	#BDRCLR	@ pv_BDRCLR ! ;
+
+: LOAD_COLORS ( -- S )
+	pv_FORCLR @ FORCLR!
+	pv_BAKCLR @ BAKCLR!
+	pv_BDRCLR @ BDRCLR! 
+	CHGCLR ;
+----
+DECIMAL
+
+: CHANGE_COLORS ( f b b -- )
+	15 FORCLR! 1 BAKCLR! 1 BDRCLR! CHGCLR ;
+
+----
+DECIMAL
 
 : TEST-ADV
+	SAVE_COLORS
+	CHANGE_COLORS
 	INIGRP
-	15 1 1 CHGCLR
 	0 CLS
 	SET_TILES
 	SET_PALS
 	14 15 PUT_TREE1
 	14 13 PUT_TREE1
-	WAIT ;
+	WAIT 
+	LOAD_COLORS ;
+
