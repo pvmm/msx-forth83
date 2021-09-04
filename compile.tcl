@@ -44,7 +44,6 @@ proc wait_response {msg cmd} {
     message "*match*"
     $cmd
   } elseif {[llength $cmd] > 0} {
-    #message "*after time 5 wait_response \"$msg\" $cmd"
     after time 5 [list wait_response "$msg" $cmd]
   }
 }
@@ -109,15 +108,21 @@ proc replace_autoexec {} {
 }
 
 proc done {} {
+  type_and_then "TEST-ADV\r" {finish}
+}
+
+proc type_and_then {msg cmd} {
+  type $msg
+  after time 5 [$cmd]
+}
+
+proc finish {} {
   global fullspeedwhenloading
   global speed
 
   message "Finished!"
-  type "TEST-ADV\r"
-
   set fullspeedwhenloading off
   set speed 100
-
   #quit
 }
 
