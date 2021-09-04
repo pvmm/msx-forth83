@@ -35,6 +35,9 @@ HEX
 
 ( Store sprites )
 SC2SPRITE SPRITE1 18 C, 18 C, 7E C, BD C, BD C, 24 C, 24 C, 66 C,
+                  ff C, e8 C, 8e C, ad C, 71 C, a4 C, 24 C, b6 C,
+                  ff C, e8 C, 8e C, ad C, 71 C, a4 C, 24 C, b6 C,
+                  ff C, e8 C, 8e C, ad C, 71 C, a4 C, 24 C, b6 C,
 
 ----
 DECIMAL
@@ -98,7 +101,7 @@ variable pv_BDRCLR
 DECIMAL
 
 : CHANGE_COLORS ( f b b -- )
-	15 FORCLR! 1 BAKCLR! 1 BDRCLR! CHGCLR ;
+	15 FORCLR! 1 BAKCLR! 2 BDRCLR! CHGCLR ;
 
 ----
 DECIMAL
@@ -113,7 +116,7 @@ DECIMAL
 	SET_SPRITES
 	14 15 PUT_TREE1
 	14 13 PUT_TREE1
-	0 10 10 0 15 PUTSPRITE
+	0 16 16 0 15 PUTSPRITE
 	WAIT 
 	LOAD_COLORS ;
 

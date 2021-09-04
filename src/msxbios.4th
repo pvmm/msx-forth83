@@ -107,7 +107,6 @@ code VDPREG! ( n reg -- )
    B PUSH
    E B MOV ( B=data )
    L C MOV ( C=reg )
-   (WRTVDP)
    B POP
    next
 end-code
