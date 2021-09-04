@@ -32,6 +32,29 @@ hex
     2dup
     800  + 8 ( from to-vram len -- ) >vram
     1000 + 8 ( from to-vram len -- ) >vram ;
+
+----
+
+hex
+
+: SC2SPRITE ( -- )
+  create
+  does> ( pat# from-addr -- )
+    swap 8 * #GRPPAT @ + 8 ( from-addr to-vram len -- ) >vram ;
+
+----
+
+decimal
+
+variable _sprite_attr_draft 2 allot
+
+: PUTSPRITE ( sprite# row col pat# color* -- )
+  ['] _sprite_attr_draft 3 + C!
+  ['] _sprite_attr_draft 2 + C!
+  ['] _sprite_attr_draft 1+  C!
+  1- ['] _sprite_attr_draft C!
+  ['] _sprite_attr_draft SWAP 4 * #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
+
 ----
 
 hex

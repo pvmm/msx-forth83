@@ -109,11 +109,15 @@ proc replace_autoexec {} {
 }
 
 proc done {} {
-  set fullspeedwhenloading off
-  set speed 100
-  update
+  global fullspeedwhenloading
+  global speed
+
   message "Finished!"
   type "TEST-ADV\r"
+
+  set fullspeedwhenloading off
+  set speed 100
+
   #quit
 }
 
