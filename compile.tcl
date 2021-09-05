@@ -1,4 +1,4 @@
-set blk_files [list msxbios.blk vt52.blk grp.blk]
+set blk_files [list msxbios.blk vt52.blk grp.blk adv.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -97,9 +97,11 @@ proc save_system {} {
 }
 
 proc bye {} {
+  global speed
   message "Closing Forth83..."
-  type "BYE\r"
-  wait_response "Pages" {replace_autoexec}
+  type "test-adv\r"
+  set speed 100
+  #wait_response "Pages" {replace_autoexec}
 }
 
 proc replace_autoexec {} {
@@ -113,7 +115,7 @@ proc done {} {
   quit
 }
 
-set renderer none
+#set renderer none
 diskmanipulator create forth.dsk 720k -dos1
 virtual_drive forth.dsk
 diskmanipulator format virtual_drive -dos1
