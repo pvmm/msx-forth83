@@ -143,15 +143,10 @@ end-code
 
 hex
 
-: SC2SPRITE8 ( -- )
-  create
-  does> ( pat# from-addr -- )
-    swap 8 * #GRPPAT @ + 8 ( from-addr to-vram len -- ) >vram ;
-
 : SC2SPRITE ( -- )
   create
   does> ( pat# from-addr -- )
-    swap 32 * #GRPPAT @ + 32 ( from-addr to-vram len -- ) >vram ;
+    swap GSPSIZ drop dup rot * #GRPPAT @ + swap ( from-addr to-vram len -- ) >vram ;
 ----
 
 decimal
@@ -161,7 +156,7 @@ decimal
   here 2 + C!
   here 1+  C!
   1- here C!
-  here SWAP #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
+  here swap #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
 ----
 
 decimal
@@ -170,8 +165,8 @@ decimal
   here 3 + C!
   here 2 + C!
   here 1+  C!
-  1- here C!
-  here SWAP 4 * #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
+  1-  here C!
+  here swap GSPSIZ drop 8 / * #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
 ----
 
 decimal

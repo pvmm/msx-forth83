@@ -1,4 +1,4 @@
-set blk_files [list msxbios.blk vt52.blk grp.blk adv.blk]
+set blk_files [list msxbios.blk vt52.blk grp.blk debug.blk adv.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -98,9 +98,11 @@ proc save_system {} {
 
 proc bye {} {
   global speed
+  global renderer
   message "Closing Forth83..."
-  type "test-adv\r"
   set speed 100
+  type "test-adv\r"
+  set renderer sdl
   #wait_response "Pages" {replace_autoexec}
 }
 
@@ -115,7 +117,7 @@ proc done {} {
   quit
 }
 
-#set renderer none
+set renderer none
 diskmanipulator create forth.dsk 720k -dos1
 virtual_drive forth.dsk
 diskmanipulator format virtual_drive -dos1
@@ -128,6 +130,11 @@ diska forth.dsk
 set save_settings_on_exit off
 set speed 9999
 set fullspeedwhenloading on
+
+# Debug
+ext debugdevice
+set debugoutput stdout
+#debug set_watchpoint write_io {0x2e 0x2f} {} {message "$::wp_last_value received from debugdevice"}
 
 message "Detecting boot..."
 wait_boot call_forth83
