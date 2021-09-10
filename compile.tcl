@@ -92,8 +92,9 @@ proc summarize {} {
 
 proc save_system {} {
   message "Writing F83MSX.COM..."
-  type "SAVE-SYSTEM F83MSX.COM\r"
-  wait_response "SAVE-SYSTEM F83MSX.COM  ok" {bye}
+  type "test-adv\r"
+  #type "SAVE-SYSTEM F83MSX.COM\r"
+  #wait_response "SAVE-SYSTEM F83MSX.COM  ok" {bye}
 }
 
 proc bye {} {
@@ -101,7 +102,6 @@ proc bye {} {
   global renderer
   message "Closing Forth83..."
   set speed 100
-  type "test-adv\r"
   set renderer sdl
   #wait_response "Pages" {replace_autoexec}
 }
