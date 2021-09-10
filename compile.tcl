@@ -1,4 +1,4 @@
-set blk_files [list msxbios.blk vt52.blk grp.blk debug.blk adv.blk]
+set blk_files [list msxbios.blk debug.blk grp.blk adv.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -117,7 +117,7 @@ proc done {} {
   quit
 }
 
-set renderer none
+#set renderer none
 diskmanipulator create forth.dsk 720k -dos1
 virtual_drive forth.dsk
 diskmanipulator format virtual_drive -dos1
@@ -128,7 +128,7 @@ diska forth.dsk
 
 # Speed up boot
 set save_settings_on_exit off
-set speed 9999
+#set speed 9999
 set fullspeedwhenloading on
 
 # Debug

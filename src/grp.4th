@@ -151,22 +151,12 @@ hex
 
 decimal
 
-: PUTSPRITE8 ( sprite# y x pat# color* -- )
-  here 3 + C!
-  here 2 + C!
-  here 1+  C!
-  1- here C!
-  here swap #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
-----
-
-decimal
-
 : PUTSPRITE ( sprite# y x pat# color* -- )
-  here 3 + C!
-  here 2 + C!
-  here 1+  C!
-  1-  here C!
-  here swap GSPSIZ drop 8 / * #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
+  here 3 + c!
+  here 2+  c!
+  here 1+  c!
+  1-  here c! ( store y - 1)
+  here swap 4 * #GRPATR @ + 4 ( from-addr to-vram len -- ) >vram ;
 ----
 
 decimal
