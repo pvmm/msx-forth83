@@ -1,0 +1,4 @@
+* fix circle from BASIC execution;
+* function that writes string to SCREEN2;
+* function that prints ".S" to debugdevice;
+* function that puts function in ISR;
