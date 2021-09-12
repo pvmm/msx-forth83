@@ -1,4 +1,4 @@
-set blk_files [list msxbios.blk debug.blk grp.blk adv.blk]
+set blk_files [list msxbios.blk debug.blk t-debug.blk grp.blk basic.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"

@@ -1,41 +1,57 @@
-\ debugdevice
+\ Support debugdevice (OpenMSX)
 
 ----
 
 decimal 2 capacity 1- thru
 
 ----
-hex code _debugmode ( byte -- )
-	E1 C,  		\ POP HL
-	7D C,  		\ LD A, L
-	D3 C, 2E C,	\ OUT 2E, A
-	00 C, 00 C,	\ NOP NOP
-	next
+
+hex code omsx.debugmode! ( byte -- )
+   H   POP   \ POP HL
+   L A MOV   \ LD A, L
+   2E  OUT   \ OUT 2E, A
+   next
 end-code
 
-: debugmode cr ." Sending byte " dup . ." to debug device at #2e..." _debugmode ;
-
-----
-hex code _debugc ( byte -- )
-	E1 C,  		\ POP HL
-	7D C,  		\ LD A, L
-	D3 C, 2F C,	\ OUT 2F, A
-	next
+hex code omsx.debug! ( byte -- )
+   H   POP            \ POP HL
+   L A MOV            \ LD A, L
+   2F  OUT            \ OUT 2F, A
+   next
 end-code
 
-: debugc cr ." Sending " dup emit ."  to debug device at #2f..." _debugc ;
 ----
-hex code _debugu ( u -- )
-	E1 C,  		\ POP HL
-	7C C,  		\ LD A, H
-	D3 C, 2F C,	\ OUT 2F, A
-	7D C,  		\ LD A, L
-	D3 C, 2F C,	\ OUT 2F, A
-	next
-end-code
 
-: debugu cr ." Sending " dup . ." ..." _debugu ;
+hex
+: .debugstr ( addr len -- )
+  23 omsx.debugmode!
+  0 DO dup I + C@ omsx.debug! LOOP DROP
+  ascii : omsx.debug! ;
+
+hex
+: (.debug")
+  R> COUNT 2DUP + >R ( str-addr str-sz -- R: addr sz)
+  .debugstr ;
+
+: .debug" ( <string>"" -- )
+  compile (.debug") ," ; immediate
+
 ----
-: debugtest
-	hex 1f debugmode
-	decimal 65 debugc ;
+hex
+: .debugc ( byte -- )
+ 5F omsx.debugmode! omsx.debug! ;
+
+: .debug ( u -- )
+ 5F omsx.debugmode! DUP
+ U2/ U2/ U2/ U2/ U2/ U2/ U2/ U2/ omsx.debug! \ MSB
+ omsx.debug!  ;                              \ LSB
+
+----
+
+: (.debugc")
+  R> COUNT 2DUP + >R ( str-addr str-sz -- R: addr sz)
+  .debugstr
+  .debugc ;
+
+: .debugc" ( <string>"" -- )
+  compile (.debugc") ," ; immediate
