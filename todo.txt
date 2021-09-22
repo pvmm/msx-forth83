@@ -1,4 +1,5 @@
-* fix circle from BASIC execution;
+* fix circle from BASIC execution; (DONE!)
+* function that reads controller;
 * function that writes string to SCREEN2;
-* function that prints ".S" to debugdevice;
 * function that puts function in ISR;
+* function that prints ".S" to debugdevice;
