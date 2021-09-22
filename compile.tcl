@@ -1,4 +1,4 @@
-set blk_files [list msxbios.blk debug.blk t-debug.blk grp.blk basic.blk]
+set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk sc0.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -134,7 +134,7 @@ set fullspeedwhenloading on
 # Debug
 ext debugdevice
 set debugoutput stdout
-#debug set_watchpoint write_io {0x2e 0x2f} {} {message "$::wp_last_value received from debugdevice"}
+#debug set_watchpoint write_io {0x2f} {} {message "$::wp_last_value received from debugdevice"}
 
 message "Detecting boot..."
 wait_boot call_forth83

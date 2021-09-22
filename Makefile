@@ -5,11 +5,13 @@
 # JANAITE 20181126, 2020
 #
 
-FILES  = msxbios.blk t-sc2.blk t-delay.blk
+FILES  = msxbios.blk shift.blk t-shift.blk t-delay.blk
 FILES += v9990.blk t-v9990.blk
 FILES += msxdos.blk t-msxdos.blk
 FILES += jed.blk flash.blk nesman.blk
-FILES += vt52.blk grp.blk debug.blk t-debug.blk basic.blk
+FILES += vt52.blk grp.blk t-grp.blk debug.blk t-debug.blk
+FILES += psg.blk t-psg.blk
+FILES += sc0.blk t-sc0.blk
 
 DIST_DIR=dist
 CC=gcc
@@ -38,8 +40,8 @@ clean:
 	$(RRM) forth.dsk
 
 .PHONY: test
-test:
-	openmsx -script openmsx.tcl -machine Sony_HB-F1XV -ext video9000 -ext ASCII_MSX-DOS2 -diska ./dist/
+test: dsk
+	openmsx -script openmsx.tcl -machine Sony_HB-F1XV -ext video9000 -ext ASCII_MSX-DOS2 -diska forth.dsk
 
 .PHONY: dsk
 dsk: $(CONVBLK) $(BLKS)

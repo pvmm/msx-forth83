@@ -68,6 +68,10 @@ hex
 0093 msxbios (WRTPSG)
 0111 msxbios (MAPXYC)
 0120 msxbios (SETC)
+00D5 msxbios (GTSTCK)
+00D8 msxbios (GTTRIG)
+00DB msxbios (GTPAD)
+00DE msxbios (GTPDL)
 ----
 
 \ DISSCR ( -- ), ENASCR ( -- )
@@ -192,6 +196,13 @@ F3B7 constant #TXTCGP   \ SCREEN 0 character pattern table
 F3B9 constant #TXTATR   \ SCREEN 0 sprite attribute table
 F3BB constant #TXTPAT   \ SCREEN 0 sprite pattern table
 
+: TXTNAM@ ( -- vaddr)  #TXTNAM @ ;
+: TXTCOL@ ( -- vaddr)  #TXTCOL @ ;
+: TXTCGP@ ( -- vaddr)  #TXTCGP @ ;
+: TXTATR@ ( -- vaddr)  #TXTATR @ ;
+: TXTPAT@ ( -- vaddr)  #TXTPAT @ ;
+----
+\ INITXT ( S -- )
 code INITXT ( S -- )
    B PUSH   (INITXT)   B POP   next
 end-code
@@ -326,7 +337,7 @@ hex FC9E constant #JIFFY
 
 : (delayjf) ( jiffy-min -- )
   begin
-    dup #JIFFY @ u<=  \ unisgned compare
+    dup #JIFFY @ u<=  \ unsigned compare
   until drop ;
 ----
 \ delayjiffy ( u -- )
@@ -497,4 +508,53 @@ F3E7 constant #STATFL
 : RG6SAV@ ( --b) #RG6SAV C@ ;
 : RG7SAV@ ( --b) #RG7SAV C@ ;
 : STATFL@ ( --b) #STATFL C@ ;
+----
+
+hex FCA9 constant #CSRSW
+: CSRSW@ ( --b) #CSRSW C@ ;
+: CSRSW! ( bool--) 0= IF 0 ELSE 1 THEN #CSRSW C! ;
+----
+
+\ joy: 0=cursors, 1=port1, 2=port2
+code GTSTCK ( joy -- status)
+ H POP
+ B PUSH
+ L A MOV
+ (GTSTCK)
+ A L MOV
+ 0 H MVI
+ B POP
+ H PUSH
+ next
+end-code
+
+----
+
+\ button: 0=space, 
+\         1=port1 bt A, 2=port2 bt A
+\         3=port1 bt B, 4=port2 bt B
+code GTTRIG ( button -- status)
+ H POP
+ B PUSH
+ L A MOV
+ (GTTRIG)
+ A L MOV
+ A H MOV
+ B POP
+ H PUSH
+ next
+end-code
+----
+
+code GTPDL ( pdlnum -- status)
+ H POP
+ B PUSH
+ L A MOV
+ (GTPDL)
+ A L MOV
+ 0 H MVI
+ B POP
+ H PUSH
+ next
+end-code
 ----

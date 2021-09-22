@@ -177,8 +177,10 @@ decimal
 : spr.pat!   ( n spr --) spr.base 2+ VRAM! ;
 
 ----
-
 hex
+: spr.8 ( -- ) e0 1 VDPREG! ;
+: spr.16 ( -- ) e2 1 VDPREG! ;
+
 : spr.ec+color@ ( spr -- n) spr.base 3 + VRAM@ ;
 : spr.ec+color! ( n spr --) spr.base 3 + VRAM! ;
 
