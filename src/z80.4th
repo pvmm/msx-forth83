@@ -1,135 +1,184 @@
 Z80 ASSEMBLER
 ----
 
+\ decimal 2 5 thru \ capacity 1- thru
 decimal 2 capacity 1- thru
 
 ----
-HEX CONTEXT ASSEMBLER
+vocabulary Z80
+
+\ save the current context
+avoc @ context !
+
+\ z/code is Z80 version of CODE
+: z/code  create hide here dup 2- ! context @ avoc ! z80 ;
+
+\ set Z80 context
+also z80 definitions hex
+
+\ Define Z80 version of END-CODE
+: z/end-code  avoc @ context ! reveal ;
 ----
 \ register stack and functions
-variable reg.p
-variable reg.0 1 allot           \ maximum of 2 places
-reg.0 reg.p !                    \ point reg.p to register stack
-: 'reg  reg.p ;                  \ top register stack position
-: reg@  reg.p @ ;                \ top register stack value
-: reg!  reg.p ! ;                \ store on register stack
+variable reg.0 2 allot          \ maximum of 3 places
+variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 
-: >registers                     \ store register
-  'reg reg.0 - 2 > if abort" Register stack overflow" then
-  reg@ ! reg@ 2+ reg! ;
-: registers>                     \ restore register
-  reg.0 'reg - 0= if abort" Register stack underflow" then
-  'reg 2- reg! 'reg @ ; 
-: ?reg.empty 'reg reg.0 - 0= ;   \ if register stack empty?
-: reg>nul  registers> drop ;     \ drop from register stack
+: 'reg  reg.p @ ;               \ top register stack position
+: reg@  reg.p @ 2- @ ;          \ top register stack value
+: reg!  reg.p ! ;               \ store on register stack
+
+\ empty register stack
+: registers>nul  reg.0 reg.p ! ;
+
+\ store register
+: >registers
+  'reg reg.0 - 4 > if
+    registers>nul abort" Register stack overflow" then
+  'reg ! 'reg 2+ reg! ;
+----
+\ register stack and functions (cont)
+
+\ restore register
+: registers>
+  'reg reg.0 - 0= if abort" Register stack underflow" then
+  reg@ 'reg 2- reg! ; 
+
+\ drop single register from register stack
+: reg>nul  drop registers> drop ;
+
+\ is register stack empty?
+: ?reg.empty 'reg reg.0 - 0= ;
 ----
 \ 8 and 16 bit register identifiers
-000 constant reg.B    ( OPCODE+00 )
-001 constant reg.C    ( OPCODE+01 )
-002 constant reg.D    ( OPCODE+02 )
-003 constant reg.E    ( OPCODE+03 )
-004 constant reg.H    ( OPCODE+04 )
-005 constant reg.L    ( OPCODE+05 )
-006 constant reg.(HL) ( OPCODE+06 )
-007 constant reg.A    ( OPCODE+07 )
-100 constant reg.BC   ( OPCODE+00 )
-110 constant reg.DE   ( OPCODE+10 )
-120 constant reg.HL   ( OPCODE+20 )
-130 constant reg.AF   ( OPCODE+30 )
-1DD constant reg.IX   ( 0DD, OPCODE+20 )
-1FD constant reg.IY   ( 0FD, OPCODE+20 )
+000 constant reg.B      ( OPCODE+00 )
+001 constant reg.C      ( OPCODE+01 )
+002 constant reg.D      ( OPCODE+02 )
+003 constant reg.E      ( OPCODE+03 )
+004 constant reg.H      ( OPCODE+04 )
+005 constant reg.L      ( OPCODE+05 )
+006 constant reg.(HL)   ( OPCODE+06 )
+007 constant reg.A      ( OPCODE+07 )
+100 constant reg.BC     ( OPCODE+00 )
+110 constant reg.DE     ( OPCODE+10 )
+120 constant reg.HL     ( OPCODE+20 )
+130 constant reg.(word) ( OPCODE+30 )
+130 constant reg.AF     ( OPCODE+30 )
+1DD constant reg.IX     ( 0DD, OPCODE+20 )
+1FD constant reg.IY     ( 0FD, OPCODE+20 )
 ----
 \ 8 and 16 bit register identifiers (cont)
 200 constant reg.(BC) ( OPCODE+00 )
 210 constant reg.(DE) ( OPCODE+10 )
 ----
 \ registers as CODE parameters
-: A     0ffff reg.A    >registers ;
-: B     0ffff reg.B    >registers ;
-: C     0ffff reg.C    >registers ;
-: D     0ffff reg.D    >registers ;
-: E     0ffff reg.E    >registers ;
-: H     0ffff reg.H    >registers ;
-: L     0ffff reg.L    >registers ;
-: (HL)  0ffff reg.(HL) >registers ;
-: BC    0ffff reg.BC   >registers ;
-: DE    0ffff reg.DE   >registers ;
-: HL    0ffff reg.HL   >registers ;
-: AF    0ffff reg.AF   >registers ;
-: IX    0ffff reg.IX   >registers ;
-: IY    0ffff reg.IY   >registers ;
+: A     0fffe reg.A    >registers ;
+: B     0fffe reg.B    >registers ;
+: C     0fffe reg.C    >registers ;
+: D     0fffe reg.D    >registers ;
+: E     0fffe reg.E    >registers ;
+: H     0fffe reg.H    >registers ;
+: L     0fffe reg.L    >registers ;
+: (HL)  0fffe reg.(HL) >registers ;
+: BC    0fffe reg.BC   >registers ;
+: DE    0fffe reg.DE   >registers ;
+: HL    0fffe reg.HL   >registers ;
+: AF    0fffe reg.AF   >registers ;
+: IX    0fffe reg.IX   >registers ;
+: IY    0fffe reg.IY   >registers ;
 ----
 \ register as CODE parameters (cont)
-: (BC)  0ffff reg.(BC) >registers ;
-: (DE)  0ffff reg.(DE) >registers ;
+: (BC)  0fffe reg.BC   >registers ;
+: (DE)  0fffe reg.DE   >registers ;
 ----
 \ detect and check type of register
 : ?reg  
-  ?reg.empty not 0ffff = and ;
+  ?reg.empty if 0 else dup 0fffe = then ;
 : ?reg8
-  ?reg.empty not 0ffff = and reg@ 8 < and reg@ 0 >= and ;
+  ?reg.empty if 0 else dup 0fffe = reg@ 8 < and reg@ 0 >= and
+  then ;
 : ?reg16
-  ?reg.empty not 0ffff = and reg@ 100 and and ;
+  ?reg.empty if 0 else dup 0fffe = reg@ 100 and and then ;
+: ?(reg16)
+  ?reg.empty if 0 else dup 0fffe = reg@ 200 and and then ;
 
 \ consume and convert register identifier into a value
-: reg>r  register> 0FF and ; ( RegID -- r )
+: reg>r  drop registers> 0FF and ; ( RegID -- r )
 ----
 \ opcode type
 : 1MI  create C, does> C@ C, ;
 : 2MI  create C, does> C@ + C, ;
+: 2MJ  create C, does> C@ + C, C, ;
 : 3MI  create C, does> C@ SWAP 8* + C, ;
 : 4MI  create C, does> C@ C, C, ;
 : 5MI  create C, does> C@ C, , ;
 ----
+\ opcodes 1/2
+\ *: any parameter type
 \ _: 8 bit register or value
 \ __: 16 bit register or value
 \ r: 8 bit register
 \ rr: 16 bit register
 \ byte: 8 bit value
 \ word: 16 bit value
-
-000 1MI (NOP)          0C1 2MI (POP)        0C5 2MI (PUSH)
-00A 2MI (LDA,(rr))     040 2MI (LDB,r)      048 2MI (LDC,r)
-050 2MI (LDD,r)        058 2MI (LDE,r)      060 2MI (LDH,r)
-068 2MI (LDL,r)        070 2MI (LD(IX+i),_) 077 2MI (LD(HL),r)
-078 2MI (LDA,r)        03E 4MI (LDA,byte)   006 4MI (LDB,byte)
-00E 4MI (LDC,byte)     016 4MI (LDD,byte)   01E 4MI (LDE,byte)
-026 4MI (LDH,byte)     02E 4MI (LDL,byte)   036 4MI (LD(HL),byte)
-002 1MI (LD(BC),A)     012 1MI (LD(DE),A)   032 4MI (LD(word),A)
-03A 4MI (LDA,(word))   031 2MI (LDSP,word)
+000 1MI (NOP)        0C1 2MI (POP)        0C5 2MI (PUSH)
+078 2MI (LDA,r)      03E 4MI (LDA,byte)   00A 2MI (LDA,(__))
+040 2MI (LDB,r)      006 4MI (LDB,byte)   046 4MI (LDB,(__))
+048 2MI (LDC,r)      00E 4MI (LDC,byte)   04E 4MI (LDC,(__))
+050 2MI (LDD,r)      016 4MI (LDD,byte)   056 4MI (LDD,(__))
+058 2MI (LDE,r)      01E 4MI (LDE,byte)   05E 4MI (LDE,(__))
+060 2MI (LDH,r)      066 4MI (LDH,(__))   068 2MI (LDL,r)
+06E 4MI (LDL,(__))   070 2MI (LD(IX+i),_) 077 2MI (LD(HL),r)
 ----
+\ opcodes 2/2
+0C3 4MI JP
+026 4MI (LDH,byte)   02E 4MI (LDL,byte)   036 4MI (LD(HL),byte)
+002 1MI (LD(BC),A)   012 1MI (LD(DE),A)   032 4MI (LD(word),A)
+03A 4MI (LDA,(word)) 031 2MI (LDSP,word)
+----
+: (LDA,*)  ?reg8 if reg>r (LDA,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDA,r) else
+           ?reg16 if reg>r (LDA,(__)) else (LDA,byte)
+           then then then ;
+: (LDB,*)  ?reg8 if reg>r (LDB,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDB,r) else
+           (LDB,byte) then then ;
+: (LDC,*)  ?reg8 if reg>r (LDC,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDC,r) else
+           (LDC,byte) then then ;
+: (LDD,*)  ?reg8 if reg>r (LDD,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDD,r) else
+           (LDD,byte) then then ;
+: (LDE,*)  ?reg8 if reg>r (LDE,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDE,r) else
+           (LDE,byte) then then ;
+----
+: (LDH,*)  ?reg8 if reg>r (LDH,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDH,r) else
+           (LDH,byte) then then ;
+: (LDL,*)  ?reg8 if reg>r (LDL,r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LDL,r) else
+           (LDL,byte) then then ;
+: (LD(HL),*)  ?reg8 if reg>r (LD(HL),r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LD(HL),r) else
+           (LD(HL),byte) then then ;
+----
+: (LDr,*)
+  reg@ reg.A    = if reg>nul (LDA,*) then
+  reg@ reg.B    = if reg>nul (LDB,*) then
+  reg@ reg.C    = if reg>nul (LDC,*) then
+  reg@ reg.D    = if reg>nul (LDD,*) then
+  reg@ reg.E    = if reg>nul (LDE,*) then
+  reg@ reg.H    = if reg>nul (LDH,*) then
+  reg@ reg.L    = if reg>nul (LDL,*) then
+  reg@ reg.(HL) = if reg>nul (LD(HL),*) then ;
+: (LDrr,*) ;
+----
+: (LDw) ;
+
 \ detect type of LD by its parameters
 : LD ( -- )
-  ?reg8 if LDr then
-  ?reg16 if LDrr else
-  LDw then ;
+  ?reg8  if (LDr,*) then
+  ?reg16 if (LDrr,*) else
+  (LDw) then ;
 ----
-\ transfer 8 bits to/from register
-: LDr  0ffff = not if abort" Operator not a register" then
-  drop
-  reg@ A    = if reg>nul (LDA) then
-  reg@ B    = if reg>nul (LDB) then
-  reg@ C    = if reg>nul (LDC) then
-  reg@ D    = if reg>nul (LDD) then
-  reg@ E    = if reg>nul (LDE) then
-  reg@ H    = if reg>nul (LDH) then
-  reg@ L    = if reg>nul (LDL) then
-  reg@ (HL) = if reg>nul (LD(HL)) else
-  abort" Invalid operator" then ;
-----
-\ transfer 16 bits to/from register
-: LDrr  0ffff = not if abort" Operator not a register" then
-  drop
-  reg@ (HL) = if reg>nul (LD(HL)) then
-  reg@ (IX) = if reg>nul (LD(IX)) then
-  reg@ (IY) = if reg>nul (LD(IY)) then
-  reg@ BC   = if reg>nul (LDBC) then
-  reg@ DE   = if reg>nul (LDDE) then
-  reg@ HL   = if reg>nul (LDHL) then
-  reg@ SP   = if reg>nul (LDSP) then
-  reg@ IX   = if reg>nul (LDIX) then
-  reg@ IY   = if reg>nul (LDIY) else
-                 reg>nul (LD(word)) then ;
-----
-: LDw ;
-
+: next  >next JP ;
