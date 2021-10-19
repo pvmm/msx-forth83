@@ -1,20 +1,20 @@
 Z80 ASSEMBLER
 ----
 
-\ decimal 2 5 thru \ capacity 1- thru
 decimal 2 capacity 1- thru
 
 ----
+only forth also
 vocabulary Z80
 
 \ save the current context
-avoc @ context !
+context @ avoc !
 
 \ z/code is Z80 version of CODE
 : z/code  create hide here dup 2- ! context @ avoc ! z80 ;
 
 \ set Z80 context
-also z80 definitions hex
+z80 definitions hex
 
 \ Define Z80 version of END-CODE
 : z/end-code  avoc @ context ! reveal ;
@@ -28,7 +28,7 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 : reg!  reg.p ! ;               \ store on register stack
 
 \ empty register stack
-: registers>nul  reg.0 reg.p ! ;
+: registers>nul  reg.0 reg! ;
 
 \ store register
 : >registers
@@ -37,7 +37,6 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
   'reg ! 'reg 2+ reg! ;
 ----
 \ register stack and functions (cont)
-
 \ restore register
 : registers>
   'reg reg.0 - 0= if abort" Register stack underflow" then
@@ -48,6 +47,9 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 
 \ is register stack empty?
 : ?reg.empty 'reg reg.0 - 0= ;
+
+\ placeholder for the register (in the stack)
+0fffe constant ph
 ----
 \ 8 and 16 bit register identifiers
 000 constant reg.B      ( OPCODE+00 )
@@ -67,39 +69,39 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 1FD constant reg.IY     ( 0FD, OPCODE+20 )
 ----
 \ 8 and 16 bit register identifiers (cont)
-200 constant reg.(BC) ( OPCODE+00 )
-210 constant reg.(DE) ( OPCODE+10 )
+200 constant reg.(BC)   ( OPCODE+00 )
+210 constant reg.(DE)   ( OPCODE+10 )
 ----
 \ registers as CODE parameters
-: A     0fffe reg.A    >registers ;
-: B     0fffe reg.B    >registers ;
-: C     0fffe reg.C    >registers ;
-: D     0fffe reg.D    >registers ;
-: E     0fffe reg.E    >registers ;
-: H     0fffe reg.H    >registers ;
-: L     0fffe reg.L    >registers ;
-: (HL)  0fffe reg.(HL) >registers ;
-: BC    0fffe reg.BC   >registers ;
-: DE    0fffe reg.DE   >registers ;
-: HL    0fffe reg.HL   >registers ;
-: AF    0fffe reg.AF   >registers ;
-: IX    0fffe reg.IX   >registers ;
-: IY    0fffe reg.IY   >registers ;
+: A     ph reg.A    >registers ;
+: B     ph reg.B    >registers ;
+: C     ph reg.C    >registers ;
+: D     ph reg.D    >registers ;
+: E     ph reg.E    >registers ;
+: H     ph reg.H    >registers ;
+: L     ph reg.L    >registers ;
+: (HL)  ph reg.(HL) >registers ;
+: BC    ph reg.BC   >registers ;
+: DE    ph reg.DE   >registers ;
+: HL    ph reg.HL   >registers ;
 ----
 \ register as CODE parameters (cont)
-: (BC)  0fffe reg.BC   >registers ;
-: (DE)  0fffe reg.DE   >registers ;
+: AF    ph reg.AF   >registers ;
+: IX    ph reg.IX   >registers ;
+: IY    ph reg.IY   >registers ;
+: (BC)  ph reg.BC   >registers ;
+: (DE)  ph reg.DE   >registers ;
 ----
 \ detect and check type of register
 : ?reg  
-  ?reg.empty if 0 else dup 0fffe = then ;
+  ?reg.empty if 0 else dup ph = then ;
 : ?reg8
-  ?reg.empty if 0 else dup 0fffe = reg@ 8 < and reg@ 0 >= and
+  ?reg.empty if 0 else dup ph = reg@ 8 < and reg@ 0 >= and
   then ;
 : ?reg16
-  ?reg.empty if 0 else dup 0fffe = reg@ 100 and and then ;
+  ?reg.empty if 0 else dup ph = reg@ 100 and and then ;
 : ?(reg16)
-  ?reg.empty if 0 else dup 0fffe = reg@ 200 and and then ;
+  ?reg.empty if 0 else dup ph = reg@ 200 and and then ;
 
 \ consume and convert register identifier into a value
 : reg>r  drop registers> 0FF and ; ( RegID -- r )
