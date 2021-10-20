@@ -129,7 +129,7 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 050 2MI (LDD,r)      016 4MI (LDD,byte)   056 4MI (LDD,(__))
 058 2MI (LDE,r)      01E 4MI (LDE,byte)   05E 4MI (LDE,(__))
 060 2MI (LDH,r)      066 4MI (LDH,(__))   068 2MI (LDL,r)
-06E 4MI (LDL,(__))   070 2MI (LD(IX+i),_) 077 2MI (LD(HL),r)
+06E 4MI (LDL,(__))   070 2MI (LD(IX+_),_) 077 2MI (LD(HL),r)
 ----
 \ opcodes 2/2
 0C3 4MI JP
@@ -163,6 +163,9 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 : (LD(HL),*)  ?reg8 if reg>r (LD(HL),r) else
            reg@ reg.HL = if reg>nul reg.(HL) (LD(HL),r) else
            (LD(HL),byte) then then ;
+: (LD(IX+_),*)  ?reg8 if reg>r (LD(HL),r) else
+           reg@ reg.HL = if reg>nul reg.(HL) (LD(HL),r) else
+           (LD(HL),byte) then then ;
 ----
 : (LDr,*)
   reg@ reg.A    = if reg>nul (LDA,*) then
@@ -173,7 +176,10 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
   reg@ reg.H    = if reg>nul (LDH,*) then
   reg@ reg.L    = if reg>nul (LDL,*) then
   reg@ reg.(HL) = if reg>nul (LD(HL),*) then ;
-: (LDrr,*) ;
+: (LDrr,*)
+  reg@ reg.IX   = if reg>nul (LD(IX+_),*) then
+  reg@ reg.IY   = if reg>nul (LD(IX+_),*) then
+  ;
 ----
 : (LDw) ;
 
