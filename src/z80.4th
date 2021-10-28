@@ -19,13 +19,17 @@ z80 definitions hex
 \ Define Z80 version of END-CODE
 : z/end-code  avoc @ context ! reveal ;
 ----
+\ Undoing C, and ,
+: undoC,  dp @ 1- dp ! ;
+: undo,   dp @ 2- dp ! ;
+
 \ Split integer into two 8-bit numbers ( n -- c c )
 : splitc  dup 8RSHIFT swap 0FF and ;
 
 \ Join 8-bit numbers into integer
 : join  dup FF00 and if abort" 8-bit value expected #1" then
-   swap dup FF00 and if abort" 8-bit value expected #2" then
-   8LSHIFT + ;
+    swap dup FF00 and if abort" 8-bit value expected #2" then
+    8LSHIFT + ;
 ----
 \ register stack and functions
 variable reg.0 2 allot          \ maximum of 3 places
@@ -96,9 +100,9 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 \ register as CODE parameters (cont)
 : AF    reg.AF       >registers ph ;
 : IX    reg.IX       >registers ph ;
-: +IX   reg.IX join  >registers ph ;
+: IX+   reg.IX join  >registers ph ;
 : IY    reg.IY       >registers ph ;
-: +IY   reg.IY join  >registers ph ;
+: IY+   reg.IY join  >registers ph ;
 : (BC)  reg.BC       >registers ph ;
 : (DE)  reg.DE       >registers ph ;
 ----
@@ -111,13 +115,18 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
   ?reg.empty if 0 else ?reg8 not then ;
 : ?(reg16)
   ?reg.empty if 0 else dup ph = reg@ 200 and and then ;
-: reg@ix/y  ?reg if reg@ 0DD and 0DD >= else 0 then ;
+: ?reg@ix/y  ?reg if reg@ 0DD and 0DD >= else 0 then ;
 
 \ Consume and convert register identifier into a value
 : reg>r  drop registers> 0FF and ; ( RegID -- r )
 
 \ Consume and convert IX or IY register into rr+index
-: reg>ix/y  drop registers> splitc ;
+: reg>ix+i  drop registers> splitc ;
+----
+\ Sum operator used on IX + c or c + IY
+: +  ?reg@ix/y if reg>r join >registers ph exit then swap
+    ?reg@ix/y if reg>r join >registers ph exit else
+    abort" IX + value or IY + value expected" then ;
 ----
 \ opcode type
 : 1MI  create C, does> C@ C, ;
@@ -178,17 +187,17 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
            reg@ reg.HL = if reg>nul reg.(HL) (LD(HL),r) else
            (LD(HL),byte) then then ;
 ----
-: (LD(IX+_),*)  ( param2 index -- )
+: (LD(IX+_),*)
   swap
   ?reg if
     ?reg16 if
-      abort" 8-bit register expected"
+      undoC, abort" 8-bit register expected as #1"
     else
       reg>r (LD(IX+_),r)
     then
   else
-    dup FF00 and if abort" 8-bit value expected #3" then
-    swap (LD(IX+_),byte)
+    dup FF00 and if undoC, abort" 8-bit value expected as #2"
+    then swap (LD(IX+_),byte)
   then ;
 ----
 : (LDr,*)
@@ -201,15 +210,18 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
   reg@ reg.L    = if reg>nul (LDL,*) then
   reg@ reg.(HL) = if reg>nul (LD(HL),*) then ;
 : (LDrr,*)
-  reg@ix/y not if abort" Not implemented yet"
-               else reg>ix/y C, (LD(IX+_),*) then ;
+  ?reg@ix/y not if abort" Not implemented yet"
+                else reg>ix+i C, (LD(IX+_),*) then ;
 ----
 : (LDw) ;
 
 \ detect type of LD by its parameters
-: LD ( -- )
+: LD ( param1 param2 -- )
   ?reg8  if (LDr,*) then
   ?reg16 if (LDrr,*) else
   (LDw) then ;
 ----
 : next  >next JP ;
+----
+\ Revert to FORTH context
+FORTH DEFINITIONS
