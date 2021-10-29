@@ -12,9 +12,18 @@ context @ avoc !
 
 \ z/code is Z80 version of CODE
 : z/code  create hide here dup 2- ! context @ avoc ! z80 ;
-
+----
 \ set Z80 context
 z80 definitions hex
+
+\ old sum word renamed
+: \+ + ;
+
+\ Set FORTH context
+: [forth]  forth context ! ;
+
+\ Restore previous context
+: [prev]  avoc @ context ! ;
 
 \ Define Z80 version of END-CODE
 : z/end-code  avoc @ context ! reveal ;
@@ -29,7 +38,7 @@ z80 definitions hex
 \ Join 8-bit numbers into integer
 : join  dup FF00 and if abort" 8-bit value expected #1" then
     swap dup FF00 and if abort" 8-bit value expected #2" then
-    8LSHIFT + ;
+    8LSHIFT \+ ;
 ----
 \ register stack and functions
 variable reg.0 2 allot          \ maximum of 3 places
@@ -118,20 +127,21 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 : ?reg@ix/y  ?reg if reg@ 0DD and 0DD >= else 0 then ;
 
 \ Consume and convert register identifier into a value
-: reg>r  drop registers> 0FF and ; ( RegID -- r )
+: reg>r  drop registers> 0FF and ; ( ph -- r )
 
 \ Consume and convert IX or IY register into rr+index
 : reg>ix+i  drop registers> splitc ;
 ----
 \ Sum operator used on IX + c or c + IY
-: +  ?reg@ix/y if reg>r join >registers ph exit then swap
-    ?reg@ix/y if reg>r join >registers ph exit else
+: + ( param1 param2 -- ph ) 
+    ?reg@ix/y if reg>r join >registers ph exit then swap
+    ?reg@ix/y if reg>r join >registers ph else
     abort" IX + value or IY + value expected" then ;
 ----
 \ opcode type
 : 1MI  create C, does> C@ C, ;
-: 2MI  create C, does> C@ + C, ;
-: 3MI  create C, does> C@ + C, C, ;
+: 2MI  create C, does> C@ \+ C, ;
+: 3MI  create C, does> C@ \+ C, C, ;
 : 4MI  create C, does> C@ C, C, ;
 : 5MI  create C, does> C@ C, C, C, ;
 \ 5MI  create C, does> C@ C, , ;
@@ -160,23 +170,23 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 002 1MI (LD(BC),A)   012 1MI (LD(DE),A)  032 4MI (LD(word),A)
 03A 4MI (LDA,(word)) 031 2MI (LDSP,word) 076 5MI (LD(IX+_),byte)
 ----
-: (LDA,*)  ?reg8 if reg>r (LDA,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDA,r) else
-           ?reg16 if reg>r (LDA,(__)) else (LDA,byte)
-           then then then ;
-: (LDB,*)  ?reg8 if reg>r (LDB,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDB,r) else
-           (LDB,byte) then then ;
+: (LDA,*)  ?reg8 if reg>r (LDA,r) exit then
+           reg@ reg.HL = if reg>nul reg.(HL) (LDA,r) exit then
+           ?reg16 if reg>r (LDA,(__)) else (LDA,byte) then ;
+: (LDB,*)  ?reg8 if reg>r (LDB,r) exit then
+           reg@ reg.HL = if reg>nul reg.(HL) (LDB,r) exit then
+           ?reg@ix/y if reg>ix+i C, (LDB,(__)) exit then
+           (LDB,byte) ;
 : (LDC,*)  ?reg8 if reg>r (LDC,r) else
            reg@ reg.HL = if reg>nul reg.(HL) (LDC,r) else
            (LDC,byte) then then ;
 : (LDD,*)  ?reg8 if reg>r (LDD,r) else
            reg@ reg.HL = if reg>nul reg.(HL) (LDD,r) else
            (LDD,byte) then then ;
+----
 : (LDE,*)  ?reg8 if reg>r (LDE,r) else
            reg@ reg.HL = if reg>nul reg.(HL) (LDE,r) else
            (LDE,byte) then then ;
-----
 : (LDH,*)  ?reg8 if reg>r (LDH,r) else
            reg@ reg.HL = if reg>nul reg.(HL) (LDH,r) else
            (LDH,byte) then then ;
@@ -201,14 +211,14 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
   then ;
 ----
 : (LDr,*)
-  reg@ reg.A    = if reg>nul (LDA,*) then
-  reg@ reg.B    = if reg>nul (LDB,*) then
-  reg@ reg.C    = if reg>nul (LDC,*) then
-  reg@ reg.D    = if reg>nul (LDD,*) then
-  reg@ reg.E    = if reg>nul (LDE,*) then
-  reg@ reg.H    = if reg>nul (LDH,*) then
-  reg@ reg.L    = if reg>nul (LDL,*) then
-  reg@ reg.(HL) = if reg>nul (LD(HL),*) then ;
+  reg@ reg.A    = if reg>nul (LDA,*) exit then
+  reg@ reg.B    = if reg>nul (LDB,*) exit then
+  reg@ reg.C    = if reg>nul (LDC,*) exit then
+  reg@ reg.D    = if reg>nul (LDD,*) exit then
+  reg@ reg.E    = if reg>nul (LDE,*) exit then
+  reg@ reg.H    = if reg>nul (LDH,*) exit then
+  reg@ reg.L    = if reg>nul (LDL,*) exit then
+  reg@ reg.(HL) = if reg>nul (LD(HL),*) exit then ;
 : (LDrr,*)
   ?reg@ix/y not if abort" Not implemented yet"
                 else reg>ix+i C, (LD(IX+_),*) then ;
@@ -217,9 +227,8 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 
 \ detect type of LD by its parameters
 : LD ( param1 param2 -- )
-  ?reg8  if (LDr,*) then
-  ?reg16 if (LDrr,*) else
-  (LDw) then ;
+  ?reg8  if (LDr,*) exit then
+  ?reg16 if (LDrr,*) else (LDw) then ;
 ----
 : next  >next JP ;
 ----

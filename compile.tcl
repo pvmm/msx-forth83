@@ -1,4 +1,4 @@
-set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk vtx1.blk vgr1.blk]
+set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk vtx1.blk vgr1.blk z80.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -78,7 +78,7 @@ proc summarize {} {
   if {[llength $blk_files] > 0} {
     open_blk_file
   } else {
-    save_system
+    #save_system
   }
 }
 
@@ -99,10 +99,10 @@ proc replace_autoexec {} {
 
 proc done {} {
   message "Finished!"
-  quit
+  #quit
 }
 
-set renderer none
+#set renderer none
 machine C-BIOS_MSX2
 ext ide
 
