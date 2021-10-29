@@ -28,7 +28,7 @@ z80 definitions hex
 \ Define Z80 version of END-CODE
 : z/end-code  avoc @ context ! reveal ;
 ----
-\ Undoing C, and ,
+\ Undoing C, and , when errors are detected
 : undoC,  dp @ 1- dp ! ;
 : undo,   dp @ 2- dp ! ;
 
@@ -40,37 +40,58 @@ z80 definitions hex
     swap dup FF00 and if abort" 8-bit value expected #2" then
     8LSHIFT \+ ;
 ----
-\ register stack and functions
-variable reg.0 2 allot          \ maximum of 3 places
-variable reg.p reg.0 reg.p !    \ point reg.p to register stack
-: 'reg  reg.p @ ;               \ top register stack position
-: reg@  reg.p @ 2- @ ;          \ get top register stack value
-: reg@mask  reg@ 0F7 and ;      \ make top register valid
-: reg!  reg.p ! ;               \ store on register stack
+\ operand stack and functions
+variable opr.p0 2 allot         \ maximum of 3 places
+variable opr.p opr.p0 opr.p !   \ point opr.p to operand stack
+: 'opr  opr.p @ ;               \ top operand stack position
+: opr@  opr.p @ 2- @ ;          \ get top operand stack value
+: reg@mask  opr@ 0F7 and ;      \ convert top value to register
+: opr!  opr.p ! ;               \ store on operand stack
 
-\ empty register stack
-: registers>nul  reg.0 reg! ;
+\ empty operand stack
+: operands>nul  opr.p0 opr! ;
 
 \ store register
-: >registers
-  'reg reg.0 - 4 > if
-    registers>nul abort" Register stack overflow" then
-  'reg ! 'reg 2+ reg! ;
+: >operands
+  'opr opr.p0 - 4 > if
+    operands>nul abort" Operand stack overflow" then
+  'opr ! 'opr 2+ opr! ;
 ----
-\ register stack and functions (cont)
+\ operand stack and functions (cont)
 \ restore register
-: registers>
-  'reg reg.0 - 0= if abort" Register stack underflow" then
-  reg@ 'reg 2- reg! ;
+: operands>
+  'opr opr.p0 - 0= if abort" Operand stack underflow" then
+  opr@ 'opr 2- opr! ;
 
 \ drop single register from register stack
-: reg>nul  drop registers> drop ;
+: opr>nul  drop operands> drop ;
 
 \ is register stack empty?
-: ?reg.empty 'reg reg.0 - 0= ;
+: ?opr.empty 'opr opr.p0 - 0= ;
 
-\ placeholder for the register (in the stack)
-0fffe constant ph
+\ stack placeholder for register and address
+0fffe constant >REG<    0fffd constant >ADDR<
+----
+variable (DEBUG) 1 (DEBUG) !
+variable LCOUNT 0 LCOUNT !
+: ()  (DEBUG) @ if LCOUNT @ 28 emit 0 u.r 29 emit then
+      LCOUNT @ 1+ LCOUNT ! ;
+----
+\ TODO: store last depth for comparisons
+variable address 0 address !
+: {  address @ if abort" Nesting } not allowed" else 1 address ! then ;
+: }  depth 0= if 0 address ! abort" Missing address" then
+     address @ if 0 address ! >operands >ADDR<
+     else abort" Matching } is missing" then ;
+
+\ First parameter position in the operand stack
+variable firstparam -1 firstparam !
+
+\ Locate first parameter in the operand stack
+: >loc<  depth firstparam ! ;
+
+\ Reset parameter position when done
+: reset!  -1 firstparam ! ;
 ----
 \ 8 and 16 bit register identifiers
 000 constant reg.B      ( OPCODE+00 )
@@ -94,58 +115,58 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 210 constant reg.(DE)   ( OPCODE+10 )
 ----
 \ registers as CODE parameters
-: A     reg.A        >registers ph ;
-: B     reg.B        >registers ph ;
-: C     reg.C        >registers ph ;
-: D     reg.D        >registers ph ;
-: E     reg.E        >registers ph ;
-: H     reg.H        >registers ph ;
-: L     reg.L        >registers ph ;
-: (HL)  reg.(HL)     >registers ph ;
-: BC    reg.BC       >registers ph ;
-: DE    reg.DE       >registers ph ;
-: HL    reg.HL       >registers ph ;
+: A     >loc< reg.A        >operands >REG< ;
+: B     >loc< reg.B        >operands >REG< ;
+: C     >loc< reg.C        >operands >REG< ;
+: D     >loc< reg.D        >operands >REG< ;
+: E     >loc< reg.E        >operands >REG< ;
+: H     >loc< reg.H        >operands >REG< ;
+: L     >loc< reg.L        >operands >REG< ;
+: (HL)  >loc< reg.(HL)     >operands >REG< ;
+: BC    >loc< reg.BC       >operands >REG< ;
+: DE    >loc< reg.DE       >operands >REG< ;
+: HL    >loc< reg.HL       >operands >REG< ;
 ----
 \ register as CODE parameters (cont)
-: AF    reg.AF       >registers ph ;
-: IX    reg.IX       >registers ph ;
-: IX+   reg.IX join  >registers ph ;
-: IY    reg.IY       >registers ph ;
-: IY+   reg.IY join  >registers ph ;
-: (BC)  reg.BC       >registers ph ;
-: (DE)  reg.DE       >registers ph ;
+: AF    >loc< reg.AF       >operands >REG< ;
+: IX    >loc< reg.IX       >operands >REG< ;
+: IX+   >loc< reg.IX join  >operands >REG< ;
+: IY    >loc< reg.IY       >operands >REG< ;
+: IY+   >loc< reg.IY join  >operands >REG< ;
+: (BC)  >loc< reg.BC       >operands >REG< ;
+: (DE)  >loc< reg.DE       >operands >REG< ;
 ----
 \ Detect and check type of register
-: ?reg  ?reg.empty if 0 else dup ph = then ;
+: ?reg  ?opr.empty if 0 else dup >REG< = then ;
 : ?reg8
-  ?reg.empty if 0 else dup ph = reg@ 8 < and reg@ 0 >= and
+  ?opr.empty if 0 else dup >REG< = opr@ 8 < and opr@ 0 >= and
   then ;
 : ?reg16
-  ?reg.empty if 0 else ?reg8 not then ;
+  ?opr.empty if 0 else ?reg8 not then ;
 : ?(reg16)
-  ?reg.empty if 0 else dup ph = reg@ 200 and and then ;
-: ?reg@ix/y  ?reg if reg@ 0DD and 0DD >= else 0 then ;
+  ?opr.empty if 0 else dup >REG< = opr@ 200 and and then ;
+: ?reg@ix/y  ?reg if opr@ 0DD and 0DD >= else 0 then ;
 
 \ Consume and convert register identifier into a value
-: reg>r  drop registers> 0FF and ; ( ph -- r )
+: opr>r  drop operands> 0F7 and ; ( >REG< -- r )
 
 \ Consume and convert IX or IY register into rr+index
-: reg>ix+i  drop registers> splitc ;
+: opr>ix+i  drop operands> splitc ;
 ----
 \ Sum operator used on IX + c or c + IY
-: + ( param1 param2 -- ph ) 
-    ?reg@ix/y if reg>r join >registers ph exit then swap
-    ?reg@ix/y if reg>r join >registers ph else
+: + ( param1 param2 -- >REG< ) 
+    ?reg@ix/y if opr>r join >operands >REG< exit then swap
+    ?reg@ix/y if opr>r join >operands >REG< else
     abort" IX + value or IY + value expected" then ;
 ----
 \ opcode type
-: 1MI  create C, does> C@ C, ;
-: 2MI  create C, does> C@ \+ C, ;
-: 3MI  create C, does> C@ \+ C, C, ;
-: 4MI  create C, does> C@ C, C, ;
-: 5MI  create C, does> C@ C, C, C, ;
-\ 5MI  create C, does> C@ C, , ;
-: 6MI  create C, does> C@ C, C, ;
+: 1MI  create C, does> C@ C, reset! ;
+: 2MI  create C, does> C@ \+ C, reset! ;
+: 3MI  create C, does> C@ \+ C, C, reset! ;
+: 4MI  create C, does> C@ C, C, reset! ;
+: 5MI  create C, does> C@ C, C, C, reset! ;
+\ 5MI  create C, does> C@ C, , reset! ;
+: 6MI  create C, does> C@ C, C, reset! ;
 ----
 \ opcodes 1/2
 \ *: any parameter type
@@ -170,31 +191,31 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
 002 1MI (LD(BC),A)   012 1MI (LD(DE),A)  032 4MI (LD(word),A)
 03A 4MI (LDA,(word)) 031 2MI (LDSP,word) 076 5MI (LD(IX+_),byte)
 ----
-: (LDA,*)  ?reg8 if reg>r (LDA,r) exit then
-           reg@ reg.HL = if reg>nul reg.(HL) (LDA,r) exit then
-           ?reg16 if reg>r (LDA,(__)) else (LDA,byte) then ;
-: (LDB,*)  ?reg8 if reg>r (LDB,r) exit then
-           reg@ reg.HL = if reg>nul reg.(HL) (LDB,r) exit then
-           ?reg@ix/y if reg>ix+i C, (LDB,(__)) exit then
+: (LDA,*)  ?reg8 if opr>r (LDA,r) exit then
+           opr@ reg.HL = if opr>nul reg.(HL) (LDA,r) exit then
+           ?reg16 if opr>r (LDA,(__)) else (LDA,byte) then ;
+: (LDB,*)  ?reg8 if opr>r (LDB,r) exit then
+           opr@ reg.HL = if opr>nul reg.(HL) (LDB,r) exit then
+           ?reg@ix/y if opr>ix+i C, (LDB,(__)) exit then
            (LDB,byte) ;
-: (LDC,*)  ?reg8 if reg>r (LDC,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDC,r) else
+: (LDC,*)  ?reg8 if opr>r (LDC,r) else
+           opr@ reg.HL = if opr>nul reg.(HL) (LDC,r) else
            (LDC,byte) then then ;
-: (LDD,*)  ?reg8 if reg>r (LDD,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDD,r) else
+: (LDD,*)  ?reg8 if opr>r (LDD,r) else
+           opr@ reg.HL = if opr>nul reg.(HL) (LDD,r) else
            (LDD,byte) then then ;
 ----
-: (LDE,*)  ?reg8 if reg>r (LDE,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDE,r) else
+: (LDE,*)  ?reg8 if opr>r (LDE,r) else
+           opr@ reg.HL = if opr>nul reg.(HL) (LDE,r) else
            (LDE,byte) then then ;
-: (LDH,*)  ?reg8 if reg>r (LDH,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDH,r) else
+: (LDH,*)  ?reg8 if opr>r (LDH,r) else
+           opr@ reg.HL = if opr>nul reg.(HL) (LDH,r) else
            (LDH,byte) then then ;
-: (LDL,*)  ?reg8 if reg>r (LDL,r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LDL,r) else
+: (LDL,*)  ?reg8 if opr>r (LDL,r) else
+           opr@ reg.HL = if opr>nul reg.(HL) (LDL,r) else
            (LDL,byte) then then ;
-: (LD(HL),*)  ?reg8 if reg>r (LD(HL),r) else
-           reg@ reg.HL = if reg>nul reg.(HL) (LD(HL),r) else
+: (LD(HL),*)  ?reg8 if opr>r (LD(HL),r) else
+           opr@ reg.HL = if opr>nul reg.(HL) (LD(HL),r) else
            (LD(HL),byte) then then ;
 ----
 : (LD(IX+_),*)
@@ -203,7 +224,7 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
     ?reg16 if
       undoC, abort" 8-bit register expected as #1"
     else
-      reg>r (LD(IX+_),r)
+      opr>r (LD(IX+_),r)
     then
   else
     dup FF00 and if undoC, abort" 8-bit value expected as #2"
@@ -211,17 +232,17 @@ variable reg.p reg.0 reg.p !    \ point reg.p to register stack
   then ;
 ----
 : (LDr,*)
-  reg@ reg.A    = if reg>nul (LDA,*) exit then
-  reg@ reg.B    = if reg>nul (LDB,*) exit then
-  reg@ reg.C    = if reg>nul (LDC,*) exit then
-  reg@ reg.D    = if reg>nul (LDD,*) exit then
-  reg@ reg.E    = if reg>nul (LDE,*) exit then
-  reg@ reg.H    = if reg>nul (LDH,*) exit then
-  reg@ reg.L    = if reg>nul (LDL,*) exit then
-  reg@ reg.(HL) = if reg>nul (LD(HL),*) exit then ;
+  opr@ reg.A    = if opr>nul (LDA,*) exit then
+  opr@ reg.B    = if opr>nul (LDB,*) exit then
+  opr@ reg.C    = if opr>nul (LDC,*) exit then
+  opr@ reg.D    = if opr>nul (LDD,*) exit then
+  opr@ reg.E    = if opr>nul (LDE,*) exit then
+  opr@ reg.H    = if opr>nul (LDH,*) exit then
+  opr@ reg.L    = if opr>nul (LDL,*) exit then
+  opr@ reg.(HL) = if opr>nul (LD(HL),*) exit then ;
 : (LDrr,*)
   ?reg@ix/y not if abort" Not implemented yet"
-                else reg>ix+i C, (LD(IX+_),*) then ;
+                else opr>ix+i C, (LD(IX+_),*) then ;
 ----
 : (LDw) ;
 

@@ -43,6 +43,10 @@ HEX CREATE (LD.binary) does>
    72 c, 19 c, FD c, 73 c, 1A c, FD c, 74 c, 1B c, FD c, 75 c,
    1C c, FD c, 76 c, 1D c, 09 c,
 ----
+variable (DEBUG) 1 (DEBUG) !
+variable LCOUNT 0 LCOUNT !
+: ><  (DEBUG) @ if LCOUNT @ 3 u.r then LCOUNT @ 1+ LCOUNT ! ;
+----
 \ Testing all LoaD opcodes
 z/code (LD.assembled)
    A        A  LD   \ A       -> A
@@ -58,41 +62,40 @@ z/code (LD.assembled)
    (BC)     A  LD   \ (BC)    -> A
    DE       A  LD   \ (DE)    -> A
    (DE)     A  LD   \ (DE)    -> A
-   FFFF     A  LD   \ (FFFF)  -> A
+>< ( FFFF ) A  LD   \ (FFFF)  -> A
 ----
-   ( FFFF ) A  LD   \ (FFFF)  -> A
-   00 + IX  A  LD   \ (IX+00) -> A
-   IY + 01  A  LD   \ (IY+01) -> A
-   01       A  LD   \ 01      -> A
-   A        B  LD   \ A       -> B
-   B        B  LD   \ B       -> B
-   C        B  LD   \ C       -> B
-   D        B  LD   \ D       -> B
-   E        B  LD   \ E       -> B
-   H        B  LD   \ H       -> B
-   L        B  LD   \ L       -> B
-   HL       B  LD   \ (HL)    -> B
-   (HL)     B  LD   \ (HL)    -> B
-   IX + 02  B  LD   \ (IX+02) -> B
-   03 + IY  B  LD   \ (IY+03) -> B
-   02       B  LD   \ 02      -> B
+>< 00 IX +  A  LD   \ (IX+00) -> A
+>< IY 01 +  A  LD   \ (IY+01) -> A
+>< 01       A  LD   \ 01      -> A
+>< A        B  LD   \ A       -> B
+>< B        B  LD   \ B       -> B
+>< C        B  LD   \ C       -> B
+>< D        B  LD   \ D       -> B
+>< E        B  LD   \ E       -> B
+>< H        B  LD   \ H       -> B
+>< L        B  LD   \ L       -> B
+>< HL       B  LD   \ (HL)    -> B
+>< (HL)     B  LD   \ (HL)    -> B
+>< IX 02 +  B  LD   \ (IX+02) -> B
+>< 03 IY +  B  LD   \ (IY+03) -> B
+>< 02       B  LD   \ 02      -> B
 ----
-   A        C  LD   \ A       -> C
-   B        C  LD   \ B       -> C
-   C        C  LD   \ C       -> C
-   D        C  LD   \ D       -> C
-   E        C  LD   \ E       -> C
-   H        C  LD   \ H       -> C
-   L        C  LD   \ L       -> C
-   HL       C  LD   \ (HL)    -> C
-   (HL)     C  LD   \ (HL)    -> C
-   04 + IX  C  LD   \ (IX+04) -> C
-   IY + 05  C  LD   \ (IY+05) -> C
-   03       C  LD   \ 03      -> C
-   A        D  LD   \ A       -> D
-   B        D  LD   \ B       -> D
-   C        D  LD   \ C       -> D
-   D        D  LD   \ D       -> D
+>< A        C  LD   \ A       -> C
+>< B        C  LD   \ B       -> C
+>< C        C  LD   \ C       -> C
+>< D        C  LD   \ D       -> C
+>< E        C  LD   \ E       -> C
+>< H        C  LD   \ H       -> C
+>< L        C  LD   \ L       -> C
+>< HL       C  LD   \ (HL)    -> C
+>< (HL)     C  LD   \ (HL)    -> C
+>< 04 IX +  C  LD   \ (IX+04) -> C
+>< IY 05 +  C  LD   \ (IY+05) -> C
+>< 03       C  LD   \ 03      -> C
+>< A        D  LD   \ A       -> D
+>< B        D  LD   \ B       -> D
+>< C        D  LD   \ C       -> D
+>< D        D  LD   \ D       -> D
 ----
    E        D  LD   \ E       -> D
    H        D  LD   \ H       -> D
@@ -183,12 +186,12 @@ z/code (LD.assembled)
    ( FFF5 ) IX LD   \ (FFF5)  -> IX
    ( FFF4 ) IY LD   \ (FFF4)  -> IY
    ( FFF3 ) SP LD   \ (FFF3)  -> SP
-   HL ( FFF1 ) LD   \ HL      -> ( FFF1 )
-   BC ( FFF1 ) LD   \ BC      -> ( FFF1 )
-   DE ( FFF1 ) LD   \ DE      -> ( FFF1 )
-   IX ( FFF1 ) LD   \ IX      -> ( FFF1 )
-   IY ( FFF1 ) LD   \ IY      -> ( FFF1 )
-   SP ( FFF0 ) LD   \ SP      -> ( FFF0 )
+   HL ( FFF1 ) LD   \ HL      -> (FFF1)
+   BC ( FFF1 ) LD   \ BC      -> (FFF1)
+   DE ( FFF1 ) LD   \ DE      -> (FFF1)
+   IX ( FFF1 ) LD   \ IX      -> (FFF1)
+   IY ( FFF1 ) LD   \ IY      -> (FFF1)
+   SP ( FFF0 ) LD   \ SP      -> (FFF0)
    HL       SP LD   \ HL      -> SP
    IX       SP LD   \ IX      -> SL
    IY       SP LD   \ IY      -> SL
