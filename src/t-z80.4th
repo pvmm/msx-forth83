@@ -8,8 +8,8 @@ decimal 2 capacity 1- thru hex
 HEX CREATE (LD.binary) does>
    \ (LDA,*) tests
    7F c, 78 c, 79 c, 7A c, 7B c, 7C c, 7D c, 7E c, 7E c, 0A c,
-   1A c, 3A c, FF c, FF c, DD c, 7E c, 00 c, FD c, 7E c, 01 c,
-   3E c, 01 c,
+   0A c, 1A c, 1A c, 3A c, FF c, FF c, DD c, 7E c, 00 c, FD c,
+   7E c, 01 c, 3E c, 01 c,
    \ (LDB,*) tests
    47 c, 40 c, 41 c, 42 c, 43 c, 44 c, 45 c, 46 c, 46 c, DD c,
    46 c, 02 c, FD c, 46 c, 03 c, 06 c, 02 c, 
