@@ -1,11 +1,11 @@
 Testing Z80 assembler
 ----
 
-decimal 2 capacity 1- thru hex
+decimal 2 capacity 1- thru
 
 ----
-\ LD.binary 1/3
-HEX CREATE (LD.binary) does>
+\ LD binary 1/3
+hex CREATE (LD.bin) does>
    \ (LDA,*) tests
    7F c, 78 c, 79 c, 7A c, 7B c, 7C c, 7D c, 7E c, 7E c, 0A c,
    0A c, 1A c, 1A c, 3A c, FF c, FF c, DD c, 7E c, 00 c, FD c,
@@ -17,7 +17,7 @@ HEX CREATE (LD.binary) does>
    4F c, 48 c, 49 c, 4A c, 4B c, 4C c, 4D c, 4E c, 4E c, DD c,
    4E c, 04 c, FD c, 4E c, 05 c, 0E c, 03 c,
 ----
-\ LD.binary 2/3
+\ LD binary 2/3
    \ (LDD,*) tests
    57 c, 50 c, 51 c, 52 c, 53 c, 54 c, 55 c, 56 c, 56 c, DD c,
    56 c, 06 c, FD c, 56 c, 07 c, 16 c, 04 c,
@@ -31,9 +31,9 @@ HEX CREATE (LD.binary) does>
    6F c, 68 c, 69 c, 6A c, 6B c, 6C c, 6D c, 6E c, 6E c, DD c,
    6E c, 0C c, FD c, 6E c, 0D c, 2E c, 07 c,
 ----
-\ LD.binary 3/3
+\ LD binary 3/3
    \ (LD(HL),*) tests
-   77 c, 70 c, 71 c, 72 c, 73 c, 74 c, 75 c, 36c, 08 c,
+   77 c, 70 c, 71 c, 72 c, 73 c, 74 c, 75 c, 36 c, 08 c,
    \ (LD(IX+i),*) tests
    DD c, 77 c, 0E c, DD c, 70 c, 0F c, DD c, 71 c, 10 c, DD c,
    72 c, 11 c, DD c, 73 c, 12 c, DD c, 74 c, 13 c, DD c, 75 c,
@@ -62,7 +62,7 @@ z/code (LD.assembled)
    (BC)     A  LD   \ (BC)    -> A
    DE       A  LD   \ (DE)    -> A
    (DE)     A  LD   \ (DE)    -> A
->< ( FFFF ) A  LD   \ (FFFF)  -> A
+   ( FFFF ) A  LD   \ (FFFF)  -> A
 ----
 >< 00 IX +  A  LD   \ (IX+00) -> A
 >< IY 01 +  A  LD   \ (IY+01) -> A
@@ -79,8 +79,8 @@ z/code (LD.assembled)
 >< IX 02 +  B  LD   \ (IX+02) -> B
 >< 03 IY +  B  LD   \ (IY+03) -> B
 >< 02       B  LD   \ 02      -> B
-----
 >< A        C  LD   \ A       -> C
+----
 >< B        C  LD   \ B       -> C
 >< C        C  LD   \ C       -> C
 >< D        C  LD   \ D       -> C
@@ -96,103 +96,103 @@ z/code (LD.assembled)
 >< B        D  LD   \ B       -> D
 >< C        D  LD   \ C       -> D
 >< D        D  LD   \ D       -> D
+>< E        D  LD   \ E       -> D
 ----
-   E        D  LD   \ E       -> D
-   H        D  LD   \ H       -> D
-   L        D  LD   \ L       -> D
-   HL       D  LD   \ (HL)    -> D
-   (HL)     D  LD   \ (HL)    -> D
-   IX 06 +  D  LD   \ (IX+06) -> D
-   07 IY +  D  LD   \ (IY+07) -> D
-   04       D  LD   \ 04      -> D
-   A        E  LD   \ A       -> E
-   B        E  LD   \ B       -> E
-   C        E  LD   \ C       -> E
-   D        E  LD   \ D       -> E
-   E        E  LD   \ E       -> E
-   H        E  LD   \ H       -> E
-   L        E  LD   \ L       -> E
-   HL       E  LD   \ (HL)    -> E
+>< H        D  LD   \ H       -> D
+>< L        D  LD   \ L       -> D
+>< HL       D  LD   \ (HL)    -> D
+>< (HL)     D  LD   \ (HL)    -> D
+>< IX 06 +  D  LD   \ (IX+06) -> D
+>< 07 IY +  D  LD   \ (IY+07) -> D
+>< 04       D  LD   \ 04      -> D
+>< A        E  LD   \ A       -> E
+>< B        E  LD   \ B       -> E
+>< C        E  LD   \ C       -> E
+>< D        E  LD   \ D       -> E
+>< E        E  LD   \ E       -> E
+>< H        E  LD   \ H       -> E
+>< L        E  LD   \ L       -> E
+>< HL       E  LD   \ (HL)    -> E
+>< (HL)     E  LD   \ (HL)    -> E
 ----
-   (HL)     E  LD   \ (HL)    -> E
-   08 IX +  E  LD   \ (IX+08) -> E
-   IY 09 +  E  LD   \ (IY+09) -> E
-   05       E  LD   \ 05      -> E
-   A        H  LD   \ A       -> H
-   B        H  LD   \ B       -> H
-   C        H  LD   \ C       -> H
-   D        H  LD   \ D       -> H
-   E        H  LD   \ E       -> H
-   H        H  LD   \ H       -> H
-   L        H  LD   \ L       -> H
-   HL       H  LD   \ (HL)    -> H
-   (HL)     H  LD   \ (HL)    -> H
-   0A IX +  H  LD   \ (IX+0A) -> H
-   IY 0B +  H  LD   \ (IY+0B) -> H
-   06       H  LD   \ 06      -> H
+>< 08 IX +  E  LD   \ (IX+08) -> E
+>< IY 09 +  E  LD   \ (IY+09) -> E
+>< 05       E  LD   \ 05      -> E
+>< A        H  LD   \ A       -> H
+>< B        H  LD   \ B       -> H
+>< C        H  LD   \ C       -> H
+>< D        H  LD   \ D       -> H
+>< E        H  LD   \ E       -> H
+>< H        H  LD   \ H       -> H
+>< L        H  LD   \ L       -> H
+>< HL       H  LD   \ (HL)    -> H
+>< (HL)     H  LD   \ (HL)    -> H
+>< 0A IX +  H  LD   \ (IX+0A) -> H
+>< IY 0B +  H  LD   \ (IY+0B) -> H
+>< 06       H  LD   \ 06      -> H
+>< A        L  LD   \ A       -> L
 ----
-   A        L  LD   \ A       -> L
-   B        L  LD   \ B       -> L
-   C        L  LD   \ C       -> L
-   D        L  LD   \ D       -> L
-   E        L  LD   \ E       -> L
-   H        L  LD   \ H       -> L
-   L        L  LD   \ L       -> L
-   HL       L  LD   \ (HL)    -> L
-   (HL)     L  LD   \ (HL)    -> L
-   IX 0C +  L  LD   \ (IX+0C) -> L
-   0D IY +  L  LD   \ (IY+0D) -> L
-   07       L  LD   \ 07      -> L
-   A      (HL) LD   \ A       -> (HL)
-   B      (HL) LD   \ B       -> (HL)
-   C      (HL) LD   \ C       -> (HL)
-   D      (HL) LD   \ D       -> (HL)
+>< B        L  LD   \ B       -> L
+>< C        L  LD   \ C       -> L
+>< D        L  LD   \ D       -> L
+>< E        L  LD   \ E       -> L
+>< H        L  LD   \ H       -> L
+>< L        L  LD   \ L       -> L
+>< HL       L  LD   \ (HL)    -> L
+>< (HL)     L  LD   \ (HL)    -> L
+>< IX 0C +  L  LD   \ (IX+0C) -> L
+>< 0D IY +  L  LD   \ (IY+0D) -> L
+>< 07       L  LD   \ 07      -> L
+>< A      (HL) LD   \ A       -> (HL)
+>< B      (HL) LD   \ B       -> (HL)
+>< C      (HL) LD   \ C       -> (HL)
+>< D      (HL) LD   \ D       -> (HL)
+>< E      (HL) LD   \ E       -> (HL)
 ----
-   E      (HL) LD   \ E       -> (HL)
-   H      (HL) LD   \ H       -> (HL)
-   L      (HL) LD   \ L       -> (HL)
-   08     (HL) LD   \ 08      -> (HL)
-   A   0E IX + LD   \ A       -> (IX+0E)
-   B   IX 0F + LD   \ B       -> (IX+0F)
-   C   10 IX + LD   \ C       -> (IX+10)
-   D   IX 11 + LD   \ D       -> (IX+11)
-   E   12 IX + LD   \ E       -> (IX+12)
-   H   IX 13 + LD   \ H       -> (IX+13)
-   L   14 IX + LD   \ L       -> (IX+14)
-   08  IX 15 + LD   \ 08      -> (IX+15)
-   A   16 IY + LD   \ A       -> (IY+16)
-   B   IY 17 + LD   \ B       -> (IY+17)
-   C   18 IY + LD   \ C       -> (IY+18)
-   D   IY 19 + LD   \ D       -> (IY+19)
+>< H      (HL) LD   \ H       -> (HL)
+>< L      (HL) LD   \ L       -> (HL)
+>< 08     (HL) LD   \ 08      -> (HL)
+>< A   0E IX + LD   \ A       -> (IX+0E)
+>< B   IX 0F + LD   \ B       -> (IX+0F)
+>< C   10 IX + LD   \ C       -> (IX+10)
+>< D   IX 11 + LD   \ D       -> (IX+11)
+>< E   12 IX + LD   \ E       -> (IX+12)
+>< H   IX 13 + LD   \ H       -> (IX+13)
+>< L   14 IX + LD   \ L       -> (IX+14)
+>< 08  IX 15 + LD   \ 08      -> (IX+15)
+>< A   16 IY + LD   \ A       -> (IY+16)
+>< B   IY 17 + LD   \ B       -> (IY+17)
+>< C   18 IY + LD   \ C       -> (IY+18)
+>< D   IY 19 + LD   \ D       -> (IY+19)
+>< E   1A IY + LD   \ E       -> (IY+1A)
 ----
-   E   1A IY + LD   \ E       -> (IY+1A)
-   H   IY 1B + LD   \ H       -> (IY+1B)
-   L   1C IY + LD   \ L       -> (IY+1C)
-   09  IY 1D + LD   \ 09      -> (IY+1D)
-   A        BC LD   \ A       -> (BC)
-   A      (BC) LD   \ A       -> (BC)
-   FFFE     BC LD   \ FFFE    -> BC
-   FFFD     DE LD   \ FFFD    -> DE
-   A        DE LD   \ A       -> (DE)
-   A      (DE) LD   \ A       -> (DE)
-   FFFC     HL LD   \ FFFC    -> HL
-   FFFB     SP LD   \ FFFB    -> SP
-   FFFA     IX LD   \ FFFA    -> IX
-   FFF9     IY LD   \ FFF9    -> IY
-   ( FFF8 ) HL LD   \ (FFF8)  -> HL
-   ( FFF7 ) BC LD   \ (FFF7)  -> BC
+>< H   IY 1B + LD   \ H       -> (IY+1B)
+>< L   1C IY + LD   \ L       -> (IY+1C)
+>< 09  IY 1D + LD   -1 6 u.r \ 09      -> (IY+1D)
+>< A        BC LD   \ A       -> (BC)
+>< A      (BC) LD   \ A       -> (BC)
+>< FFFE     BC LD   \ FFFE    -> BC
+>< FFFD     DE LD   \ FFFD    -> DE
+>< A        DE LD   \ A       -> (DE)
+>< A      (DE) LD   \ A       -> (DE)
+>< FFFC     HL LD   \ FFFC    -> HL
+>< FFFB     SP LD   \ FFFB    -> SP
+>< FFFA     IX LD   \ FFFA    -> IX
+>< FFF9     IY LD   \ FFF9    -> IY
+>< ( FFF8 ) HL LD   \ (FFF8)  -> HL
+>< ( FFF7 ) BC LD   \ (FFF7)  -> BC
+>< ( FFF6 ) DE LD   \ (FFF6)  -> DE
 ----
-   ( FFF6 ) DE LD   \ (FFF6)  -> DE
-   ( FFF5 ) IX LD   \ (FFF5)  -> IX
-   ( FFF4 ) IY LD   \ (FFF4)  -> IY
-   ( FFF3 ) SP LD   \ (FFF3)  -> SP
-   HL ( FFF1 ) LD   \ HL      -> (FFF1)
-   BC ( FFF1 ) LD   \ BC      -> (FFF1)
-   DE ( FFF1 ) LD   \ DE      -> (FFF1)
-   IX ( FFF1 ) LD   \ IX      -> (FFF1)
-   IY ( FFF1 ) LD   \ IY      -> (FFF1)
-   SP ( FFF0 ) LD   \ SP      -> (FFF0)
-   HL       SP LD   \ HL      -> SP
-   IX       SP LD   \ IX      -> SL
-   IY       SP LD   \ IY      -> SL
+>< ( FFF5 ) IX LD   \ (FFF5)  -> IX
+>< ( FFF4 ) IY LD   \ (FFF4)  -> IY
+>< ( FFF3 ) SP LD   \ (FFF3)  -> SP
+>< HL ( FFF1 ) LD   \ HL      -> (FFF1)
+>< BC ( FFF1 ) LD   \ BC      -> (FFF1)
+>< DE ( FFF1 ) LD   \ DE      -> (FFF1)
+>< IX ( FFF1 ) LD   \ IX      -> (FFF1)
+>< IY ( FFF1 ) LD   \ IY      -> (FFF1)
+>< SP ( FFF0 ) LD   \ SP      -> (FFF0)
+>< HL       SP LD   \ HL      -> SP
+>< IX       SP LD   \ IX      -> SL
+>< IY       SP LD   \ IY      -> SL
 end-code
