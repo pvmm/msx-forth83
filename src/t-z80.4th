@@ -23,7 +23,7 @@ hex CREATE (LD.bin) does>
    56 c, 06 c, FD c, 56 c, 07 c, 16 c, 04 c,
    \ (LDE,*) tests
    5F c, 58 c, 59 c, 5A c, 5B c, 5C c, 5D c, 5E c, 5E c, DD c,
-   5E c, 08 c, FD c, 56 c, 09 c, 1E c, 05 c,
+   5E c, 08 c, FD c, 5E c, 09 c, 1E c, 05 c,
    \ (LDH,*) tests
    67 c, 60 c, 61 c, 62 c, 63 c, 64 c, 65 c, 66 c, 66 c, DD c,
    66 c, 0A c, FD c, 66 c, 0B c, 26 c, 06 c,                         
@@ -34,7 +34,7 @@ hex CREATE (LD.bin) does>
 \ LD binary 3/3
    \ (LD(HL),*) tests
    77 c, 70 c, 71 c, 72 c, 73 c, 74 c, 75 c, 36 c, 08 c,
-   \ (LD(IX+i),*) tests
+   \ (LD(IX+i),*) tests (!!!)
    DD c, 77 c, 0E c, DD c, 70 c, 0F c, DD c, 71 c, 10 c, DD c,
    72 c, 11 c, DD c, 73 c, 12 c, DD c, 74 c, 13 c, DD c, 75 c,
    14 c, DD c, 76 c, 15 c, 08 c,
@@ -45,7 +45,7 @@ hex CREATE (LD.bin) does>
 ----
 variable (DEBUG) 1 (DEBUG) !
 variable LCOUNT 0 LCOUNT !
-: ><  (DEBUG) @ if LCOUNT @ 3 u.r then LCOUNT @ 1+ LCOUNT ! ;
+: ><  (DEBUG) @ if LCOUNT @ 3 u.r space .S cr then LCOUNT @ 1+ LCOUNT ! ;
 ----
 \ Testing all LoaD opcodes
 z/code (LD.assembled)
@@ -159,7 +159,7 @@ z/code (LD.assembled)
 >< E   12 IX + LD   \ E       -> (IX+12)
 >< H   IX 13 + LD   \ H       -> (IX+13)
 >< L   14 IX + LD   \ L       -> (IX+14)
->< 08  IX 15 + LD   \ 08      -> (IX+15)
+>< 08  IX 14 + LD   \ 08      -> (IX+14)
 >< A   16 IY + LD   \ A       -> (IY+16)
 >< B   IY 17 + LD   \ B       -> (IY+17)
 >< C   18 IY + LD   \ C       -> (IY+18)
@@ -168,7 +168,7 @@ z/code (LD.assembled)
 ----
 >< H   IY 1B + LD   \ H       -> (IY+1B)
 >< L   1C IY + LD   \ L       -> (IY+1C)
->< 09  IY 1D + LD   -1 6 u.r \ 09      -> (IY+1D)
+>< 09  IY 1D + LD   \ 09      -> (IY+1D)
 >< A        BC LD   \ A       -> (BC)
 >< A      (BC) LD   \ A       -> (BC)
 >< FFFE     BC LD   \ FFFE    -> BC
@@ -186,13 +186,13 @@ z/code (LD.assembled)
 >< ( FFF5 ) IX LD   \ (FFF5)  -> IX
 >< ( FFF4 ) IY LD   \ (FFF4)  -> IY
 >< ( FFF3 ) SP LD   \ (FFF3)  -> SP
->< HL ( FFF1 ) LD   \ HL      -> (FFF1)
+>< HL ( FFF2 ) LD   \ HL      -> (FFF2)
 >< BC ( FFF1 ) LD   \ BC      -> (FFF1)
->< DE ( FFF1 ) LD   \ DE      -> (FFF1)
->< IX ( FFF1 ) LD   \ IX      -> (FFF1)
->< IY ( FFF1 ) LD   \ IY      -> (FFF1)
->< SP ( FFF0 ) LD   \ SP      -> (FFF0)
+>< DE ( FFF0 ) LD   \ DE      -> (FFF0)
+>< IX ( FFEF ) LD   \ IX      -> (FFFF)
+>< IY ( FFEE ) LD   \ IY      -> (FFFE)
+>< SP ( FFED ) LD   \ SP      -> (FFFD)
 >< HL       SP LD   \ HL      -> SP
 >< IX       SP LD   \ IX      -> SL
 >< IY       SP LD   \ IY      -> SL
-end-code
+z/end-code
