@@ -15,7 +15,7 @@ FILES += debug.blk t-debug.blk
 FILES += psg.blk t-psg.blk
 FILES += vtx1.blk t-vtx.blk
 FILES += vgr1.blk t-vgr.blk
-FILES += rnd.blk t-rnd.blk z80.blk
+FILES += rnd.blk t-rnd.blk z80.blk t-z80.blk
 
 DIST_DIR=dist
 CC=gcc

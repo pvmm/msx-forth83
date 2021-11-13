@@ -44,8 +44,8 @@ variable opr.p0 2 allot         \ maximum of 3 places
 variable opr.p opr.p0 opr.p !   \ point opr.p to operand stack
 : 'opr  opr.p @ ;               \ top operand stack position
 : opr@  opr.p @ 2- @ ;          \ get top operand stack value
-: reg@mask  opr@ 0F7 and ;      \ convert top value to register
 : opr!  opr.p ! ;               \ store on operand stack
+: opr#  'opr opr.p0 - 2 / ;     \ get operand stack size
 
 \ empty operand stack
 : oprs>nul  opr.p0 opr! ;
@@ -59,6 +59,7 @@ variable opr.p opr.p0 opr.p !   \ point opr.p to operand stack
 \ operand stack and functions (cont)
 \ restore register
 : opr>
+  dup 0fff0 - 0 < if abort" Not a placeholder" then
   'opr opr.p0 - 0= if abort" Operand stack underflow" then
   drop opr@ 'opr 2- opr! ;
 
@@ -69,7 +70,8 @@ variable opr.p opr.p0 opr.p !   \ point opr.p to operand stack
 : ?opr  'opr opr.p0 - 0> ;
 
 \ stack placeholder for register, address and index
-0fffe constant >R<    0fffd constant >A<    0fffc constant >I<
+0fff1 constant >R<   0fff3 constant >8R<   0fff5 constant >16R<
+0fff2 constant >A<   0fff4 constant >I<
 ----
 variable (DEBUG) 1 (DEBUG) !
 variable LCOUNT 0 LCOUNT !
@@ -114,36 +116,34 @@ variable firstparam -1 firstparam !
 210 constant reg.(DE)   (S OPCODE+10 )
 ----
 \ registers as CODE parameters
-: A     >loc< reg.A        >opr >R< ;
-: B     >loc< reg.B        >opr >R< ;
-: C     >loc< reg.C        >opr >R< ;
-: D     >loc< reg.D        >opr >R< ;
-: E     >loc< reg.E        >opr >R< ;
-: H     >loc< reg.H        >opr >R< ;
-: L     >loc< reg.L        >opr >R< ;
-: (HL)  >loc< reg.(HL)     >opr >R< ;
-: BC    >loc< reg.BC       >opr >R< ;
-: DE    >loc< reg.DE       >opr >R< ;
-: HL    >loc< reg.HL       >opr >R< ;
+: A     >loc< reg.A        >opr >8R< ;
+: B     >loc< reg.B        >opr >8R< ;
+: C     >loc< reg.C        >opr >8R< ;
+: D     >loc< reg.D        >opr >8R< ;
+: E     >loc< reg.E        >opr >8R< ;
+: H     >loc< reg.H        >opr >8R< ;
+: L     >loc< reg.L        >opr >8R< ;
+: (HL)  >loc< reg.(HL)     >opr >8R< ;
+: BC    >loc< reg.BC       >opr >16R< ;
+: DE    >loc< reg.DE       >opr >16R< ;
+: HL    >loc< reg.HL       >opr >16R< ;
 ----
 \ register as CODE parameters (cont)
-: SP    >loc< reg.SP       >opr >R< ;
-: AF    >loc< reg.AF       >opr >R< ;
-: IX    >loc< reg.IX       >opr >R< ;
-: IX+   >loc< reg.IX join  >opr >R< ;
-: IY    >loc< reg.IY       >opr >R< ;
-: IY+   >loc< reg.IY join  >opr >R< ;
-: (BC)  >loc< reg.BC       >opr >R< ;
-: (DE)  >loc< reg.DE       >opr >R< ;
+: SP    >loc< reg.SP       >opr >16R< ;
+: AF    >loc< reg.AF       >opr >16R< ;
+: IX    >loc< reg.IX       >opr >16R< ;
+: IX+   >loc< reg.IX join  >opr >16R< ;
+: IY    >loc< reg.IY       >opr >16R< ;
+: IY+   >loc< reg.IY join  >opr >16R< ;
+: (BC)  >loc< reg.BC       >opr >16R< ;
+: (DE)  >loc< reg.DE       >opr >16R< ;
 ----
 \ operand stack checkings
-: ?r  ?opr if dup >R< = else 0 then ;               \ register?
-: ?r8                                         \ 8-bit register?
-  ?r if opr@ 8 < opr@ 0 >= and else 0 then ;
-: ?r16                                       \ 16-bit register?
-  ?r if ?r8 not else 0 then ;
-: ?(r16)                          \ is 16-bit register address?
-  ?opr if dup >R< = opr@ 200 and and else 0 then ;
+: ?r  ?opr if dup >R< and 0fff1 = else 0 then ;     \ register?
+: ?8r                                         \ 8-bit register?
+  ?r if dup >8R< = else 0 then ;
+: ?16r                                       \ 16-bit register?
+  ?r if dup >16R< = else 0 then ;
 : ?idx  ?opr if dup >I< = else 0 then ;        \ indexed ix/iy?
 : ?ixy  ?r if opr@ 0FD and 0DD >= else 0 then ;     \ ix or iy?
 : ?adr  ?opr if dup >A< = else 0 then ;              \ address?
@@ -154,12 +154,12 @@ variable firstparam -1 firstparam !
 : opr>idx  opr> splitc ;
 
 \ Check if signed 8-bit value in 16-bit space
-: ?s8b  dup dup 7F <= swap -80 >= and ;
+: ?8s  dup dup 7F <= swap -80 >= and ;
 
 \ Sum operator used on IX + i or i + IY
 : + (S param1 param2 -- >R< ) 
  ?ixy not if
-    ?s8b not if abort" Signed 8-bit overflow" then
+    ?8s not if abort" Signed 8-bit overflow" then
     swap then
  ?ixy not if abort" IX/IY register expected" then
  opr>r join >opr >I< ;
@@ -177,7 +177,7 @@ variable firstparam -1 firstparam !
 \ rr: 16 bit register
 \ b: 8 bit value
 \ w: 16 bit value
-078 2MI (LDA,r)       03E 4MI (LDA,b)   00A 2MI (LDA,(rr))
+078 2MI (LDA,r)       03E 4MI (LDA,b)      00A 2MI (LDA,(rr))
 07E 4MI (LDA,(IX+i))  040 2MI (LDB,r)      006 4MI (LDB,b)
 046 4MI (LDB,(IX+i))  048 2MI (LDC,r)      00E 4MI (LDC,b)
 04E 4MI (LDC,(IX+i))  050 2MI (LDD,r)      016 4MI (LDD,b)
@@ -194,33 +194,37 @@ variable firstparam -1 firstparam !
 000 1MI (NOP)         0C1 2MI (POP)        0C5 2MI (PUSH)
 0C3 4MI JP
 ----
-: (LDA,*)  ?r8 if opr>r (LDA,r) exit then
+: (LDA,*)  ?8r if opr>r (LDA,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDA,r) exit then
    ?idx if opr>idx C, (LDA,(IX+i)) exit then
-   ?r16 if opr>r (LDA,(rr)) exit then
+   ?16r if opr>r (LDA,(rr)) exit then
    ?adr if opr> (LDA,(w)) else (LDA,b) then ;
-: (LDB,*)  ?r8 if opr>r (LDB,r) exit then
+: (LDB,*)  ?8r if opr>r (LDB,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDB,r) exit then
+   opr@ reg.(HL) = if opr>nul reg.(HL) (LDB,r) exit then
    ?idx if opr>idx C, (LDB,(IX+i)) else (LDB,b) then ;
-: (LDC,*)  ?r8 if opr>r (LDC,r) exit then
+: (LDC,*)  ?8r if opr>r (LDC,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDC,r) exit then
+   opr@ reg.(HL) = if opr>nul reg.(HL) (LDC,r) exit then
    ?idx if opr>idx C, (LDC,(IX+i)) else (LDC,b) then ;
-: (LDD,*)  ?r8 if opr>r (LDD,r) exit then
+: (LDD,*)  ?8r if opr>r (LDD,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDD,r) exit then
-   ?idx if opr>idx C, (LDD,(IX+i)) else (LDD,b) then ;
+   opr@ reg.(HL) = if opr>nul reg.(HL) (LDD,r) exit then
 ----
-: (LDE,*)  ?r8 if opr>r (LDE,r) exit then
+   ?idx if opr>idx C, (LDD,(IX+i)) else (LDD,b) then ;
+: (LDE,*)  ?8r if opr>r (LDE,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDE,r) exit then
+   opr@ reg.(HL) = if opr>nul reg.(HL) (LDE,r) exit then
    ?idx if opr>idx C, (LDE,(IX+i)) else (LDE,b) then ;
-: (LDH,*)  ?r8 if opr>r (LDH,r) exit then
+: (LDH,*)  ?8r if opr>r (LDH,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDH,r) exit then
+   opr@ reg.(HL) = if opr>nul reg.(HL) (LDH,r) exit then
    ?idx if opr>idx C, (LDH,(IX+i)) else (LDH,b) then ;
-: (LDL,*)  ?r8 if opr>r (LDL,r) exit then
+: (LDL,*)  ?8r if opr>r (LDL,r) exit then
    opr@ reg.HL = if opr>nul reg.(HL) (LDL,r) exit then
+   opr@ reg.(HL) = if opr>nul reg.(HL) (LDL,r) exit then
    ?idx if opr>idx C, (LDL,(IX+i)) else (LDL,b) then ;
-: (LD(HL),*)  ?r8 if opr>r (LD(HL),r) exit then
-   opr@ reg.HL = if opr>nul reg.(HL) (LD(HL),r) else
-   (LD(HL),b) then ;
+: (LD(HL),*)  ?8r if opr>r (LD(HL),r) exit then (LD(HL),b) ;
 ----
 \ Load into 8-bit register
 : (LDr,*)
@@ -252,27 +256,27 @@ variable firstparam -1 firstparam !
  opr@ reg.SP = if opr>nul (LDSP,*) exit then
  opr>r >R
  opr@ reg.A = if opr>nul R> (LD(rr),A)' exit then
- ?r if R> abort" Invalid 2nd parameter" then
+ ?r if R> .S abort" Invalid 2nd parameter" then
  ?adr if opr> R> (LDrr,(w))' exit then
  R> (LDrr,w)' ;
 ----
 \ Load second parameter into indexed register
 : (LD(IX+i),*)
- opr> swap
- ?r8  if opr>r swap splitc C, (LD(IX+i),r) exit then
- ?s8b if swap splitc C, reg.HL C, (LD(IX+i),r) exit then
+ opr> >R
+ ?8r if R> splitc C, swap opr>r (LD(IX+i),r) exit then
+ ?8s if R> splitc C, reg.(HL) (LD(IX+i),r) C, exit then
  abort" 8-bit parameter expected" ;
 : (LDw,*)
  opr> >R
  opr@ reg.A = if opr>nul R> reg.(w) (LD(rr),A)' exit then
- ?r16 if R> opr>r (LD(w),rr) exit then
+ ?16r if R> opr>r (LD(w),rr) exit then
  R> abort" Invalid parameter" ;
 ----
 \ detect type of LD by its parameters
 : LD (S param1 param2 -- )
-  ?r8  if (LDr,*) exit then
+  ?8r  if (LDr,*) exit then
   ?idx if (LD(IX+i),*) exit then
-  ?r16 if (LDrr,*) exit else (LDw,*) then ;
+  ?16r if (LDrr,*) exit else (LDw,*) then ;
 ----
 : next  >next JP ;
 ----

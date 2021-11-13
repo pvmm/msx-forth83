@@ -37,35 +37,41 @@ hex CREATE (LD.bin) does>
    \ (LD(IX+i),*) tests (!!!)
    DD c, 77 c, 0E c, DD c, 70 c, 0F c, DD c, 71 c, 10 c, DD c,
    72 c, 11 c, DD c, 73 c, 12 c, DD c, 74 c, 13 c, DD c, 75 c,
-   14 c, DD c, 76 c, 15 c, 08 c,
+   14 c, DD c, 76 c, 14 c, 08 c,
    \ (LD(IY+i),*) tests
    FD c, 77 c, 16 c, FD c, 70 c, 17 c, FD c, 71 c, 18 c, FD c,
    72 c, 19 c, FD c, 73 c, 1A c, FD c, 74 c, 1B c, FD c, 75 c,
    1C c, FD c, 76 c, 1D c, 09 c,
+   \ (LDrr,*) tests
+   02 c, 02 c, 01 c, fe c, ff c, 11 c, fd c, ff c, 12 c, 12 c,
+   21 c, fc c, ff c,
 ----
 variable (DEBUG) 1 (DEBUG) !
-variable LCOUNT 0 LCOUNT !
-: ><  (DEBUG) @ if LCOUNT @ 3 u.r space .S cr then LCOUNT @ 1+ LCOUNT ! ;
+variable LCOUNT -1 LCOUNT !
+z80 also
+: ><  (DEBUG) @ if LCOUNT @ 3 u.r space .S ." /"
+ opr# 1 u.r cr then LCOUNT @ 1+ LCOUNT ! ;
 ----
 \ Testing all LoaD opcodes
 z/code (LD.assembled)
-   A        A  LD   \ A       -> A
-   B        A  LD   \ B       -> A
-   C        A  LD   \ C       -> A
-   D        A  LD   \ D       -> A
-   E        A  LD   \ E       -> A
-   H        A  LD   \ H       -> A
-   L        A  LD   \ L       -> A
-   HL       A  LD   \ (HL)    -> A
-   (HL)     A  LD   \ (HL)    -> A
-   BC       A  LD   \ (BC)    -> A
-   (BC)     A  LD   \ (BC)    -> A
-   DE       A  LD   \ (DE)    -> A
-   (DE)     A  LD   \ (DE)    -> A
-   ( FFFF ) A  LD   \ (FFFF)  -> A
 ----
+><   A        A  LD   \ A       -> A
+><   B        A  LD   \ B       -> A
+><   C        A  LD   \ C       -> A
+><   D        A  LD   \ D       -> A
+><   E        A  LD   \ E       -> A
+><   H        A  LD   \ H       -> A
+><   L        A  LD   \ L       -> A
+><   HL       A  LD   \ (HL)    -> A
+><   (HL)     A  LD   \ (HL)    -> A
+><   BC       A  LD   \ (BC)    -> A
+><   (BC)     A  LD   \ (BC)    -> A
+><   DE       A  LD   \ (DE)    -> A
+><   (DE)     A  LD   \ (DE)    -> A
+><   ( FFFF ) A  LD   \ (FFFF)  -> A
 >< 00 IX +  A  LD   \ (IX+00) -> A
 >< IY 01 +  A  LD   \ (IY+01) -> A
+----
 >< 01       A  LD   \ 01      -> A
 >< A        B  LD   \ A       -> B
 >< B        B  LD   \ B       -> B
@@ -80,9 +86,9 @@ z/code (LD.assembled)
 >< 03 IY +  B  LD   \ (IY+03) -> B
 >< 02       B  LD   \ 02      -> B
 >< A        C  LD   \ A       -> C
-----
 >< B        C  LD   \ B       -> C
 >< C        C  LD   \ C       -> C
+----
 >< D        C  LD   \ D       -> C
 >< E        C  LD   \ E       -> C
 >< H        C  LD   \ H       -> C
@@ -97,9 +103,9 @@ z/code (LD.assembled)
 >< C        D  LD   \ C       -> D
 >< D        D  LD   \ D       -> D
 >< E        D  LD   \ E       -> D
-----
 >< H        D  LD   \ H       -> D
 >< L        D  LD   \ L       -> D
+----
 >< HL       D  LD   \ (HL)    -> D
 >< (HL)     D  LD   \ (HL)    -> D
 >< IX 06 +  D  LD   \ (IX+06) -> D
@@ -114,9 +120,9 @@ z/code (LD.assembled)
 >< L        E  LD   \ L       -> E
 >< HL       E  LD   \ (HL)    -> E
 >< (HL)     E  LD   \ (HL)    -> E
-----
 >< 08 IX +  E  LD   \ (IX+08) -> E
 >< IY 09 +  E  LD   \ (IY+09) -> E
+----
 >< 05       E  LD   \ 05      -> E
 >< A        H  LD   \ A       -> H
 >< B        H  LD   \ B       -> H
@@ -131,9 +137,9 @@ z/code (LD.assembled)
 >< IY 0B +  H  LD   \ (IY+0B) -> H
 >< 06       H  LD   \ 06      -> H
 >< A        L  LD   \ A       -> L
-----
 >< B        L  LD   \ B       -> L
 >< C        L  LD   \ C       -> L
+----
 >< D        L  LD   \ D       -> L
 >< E        L  LD   \ E       -> L
 >< H        L  LD   \ H       -> L
@@ -148,9 +154,9 @@ z/code (LD.assembled)
 >< C      (HL) LD   \ C       -> (HL)
 >< D      (HL) LD   \ D       -> (HL)
 >< E      (HL) LD   \ E       -> (HL)
-----
 >< H      (HL) LD   \ H       -> (HL)
 >< L      (HL) LD   \ L       -> (HL)
+----
 >< 08     (HL) LD   \ 08      -> (HL)
 >< A   0E IX + LD   \ A       -> (IX+0E)
 >< B   IX 0F + LD   \ B       -> (IX+0F)
@@ -165,26 +171,26 @@ z/code (LD.assembled)
 >< C   18 IY + LD   \ C       -> (IY+18)
 >< D   IY 19 + LD   \ D       -> (IY+19)
 >< E   1A IY + LD   \ E       -> (IY+1A)
-----
 >< H   IY 1B + LD   \ H       -> (IY+1B)
 >< L   1C IY + LD   \ L       -> (IY+1C)
+----
 >< 09  IY 1D + LD   \ 09      -> (IY+1D)
->< A        BC LD   \ A       -> (BC)
->< A      (BC) LD   \ A       -> (BC)
->< FFFE     BC LD   \ FFFE    -> BC
->< FFFD     DE LD   \ FFFD    -> DE
->< A        DE LD   \ A       -> (DE)
->< A      (DE) LD   \ A       -> (DE)
->< FFFC     HL LD   \ FFFC    -> HL
->< FFFB     SP LD   \ FFFB    -> SP
+>< A        BC LD   \ A       -> (BC) : 02 C,
+>< A      (BC) LD   \ A       -> (BC) : 02 C,
+>< FFFE     BC LD   \ FFFE    -> BC   : 01 C, FE C, FF C,
+>< FFFD     DE LD   \ FFFD    -> DE   : 11 C, FD C, FF C,
+>< A        DE LD   \ A       -> (DE) : 12 C,
+>< A      (DE) LD   \ A       -> (DE) : 12 C,
+>< FFFC     HL LD   \ FFFC    -> HL   : 21 C, FC C, FF C,
+>< FFFB     SP LD   \ FFFB    -> SP   : ED C, 7B C, FB C, FF C,
 >< FFFA     IX LD   \ FFFA    -> IX
 >< FFF9     IY LD   \ FFF9    -> IY
 >< ( FFF8 ) HL LD   \ (FFF8)  -> HL
 >< ( FFF7 ) BC LD   \ (FFF7)  -> BC
 >< ( FFF6 ) DE LD   \ (FFF6)  -> DE
-----
 >< ( FFF5 ) IX LD   \ (FFF5)  -> IX
 >< ( FFF4 ) IY LD   \ (FFF4)  -> IY
+----
 >< ( FFF3 ) SP LD   \ (FFF3)  -> SP
 >< HL ( FFF2 ) LD   \ HL      -> (FFF2)
 >< BC ( FFF1 ) LD   \ BC      -> (FFF1)
