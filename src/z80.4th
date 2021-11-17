@@ -59,8 +59,8 @@ variable opr.p opr.p0 opr.p !   \ point opr.p to operand stack
 \ operand stack and functions (cont)
 \ restore register
 : opr>
-  dup 0fff0 - 0 < if abort" Not a placeholder" then
-  'opr opr.p0 - 0= if abort" Operand stack underflow" then
+  dup 0fff0 - 0 < abort" Not a placeholder"
+  'opr opr.p0 - 0= abort" Operand stack underflow"
   drop opr@ 'opr 2- opr! ;
 
 \ drop single register from register stack
@@ -74,9 +74,10 @@ variable opr.p opr.p0 opr.p !   \ point opr.p to operand stack
 0fff2 constant >A<   0fff4 constant >I<
 ----
 variable (DEBUG) 1 (DEBUG) !
-variable LCOUNT 0 LCOUNT !
-: ()  (DEBUG) @ if LCOUNT @ 28 emit 0 u.r 29 emit then
-      LCOUNT @ 1+ LCOUNT ! ;
+variable LCOUNT -1 LCOUNT !
+: ><
+ LCOUNT @ 1+ LCOUNT !
+ (DEBUG) @ if LCOUNT @ 3 u.r space .S ." /" opr# 1 u.r cr then ;
 ----
 variable start( 0 start( !
 variable address 0 address !
@@ -190,7 +191,7 @@ variable firstparam -1 firstparam !
 021 5MI (LDHL,w)      02A 5MI (LDHL,(w))   0F9 1MI (LDSP,HL)
 070 3MI (LD(IX+i),r)  076 6MI (LD(IX+i),b)
 002 2MI (LD(rr),A)    03A 5MI (LDA,(w))    001 6MI (LDrr,w)
-04B 6MI (LDrr,(w))    043 6MI (LD(w),rr) 
+04B 6MI (LDrr,(w))    043 6MI (LD(w),rr)   022 5MI (LD(w),HL)
 000 1MI (NOP)         0C1 2MI (POP)        0C5 2MI (PUSH)
 0C3 4MI JP
 ----
@@ -242,7 +243,7 @@ variable firstparam -1 firstparam !
 : (LDrr,(w))'
  dup reg.HL = if drop (LDHL,(w)) exit then
  dup reg.IX = over reg.IY = or if C, (LDHL,(w)) exit then
- 0ED C, (LDrr,(w)) ;
+ 0ED C, (LDrr,(w)) ; \ TODO: make it simple
 : (LDrr,w)'
  dup reg.IX = over reg.IY = or if C, (LDHL,w) exit then
  (LDrr,w) ;
@@ -259,6 +260,11 @@ variable firstparam -1 firstparam !
  ?r if R> .S abort" Invalid 2nd parameter" then
  ?adr if opr> R> (LDrr,(w))' exit then
  R> (LDrr,w)' ;
+: (LD(w),rr)'
+ >R \ store address again
+ opr@ reg.HL = if opr>nul R> (LD(w),HL) exit then
+ ?ixy if opr>r R> swap C, (LD(w),HL) exit then
+ opr>r R> swap 0ED C, (LD(w),rr) ;
 ----
 \ Load second parameter into indexed register
 : (LD(IX+i),*)
@@ -269,7 +275,7 @@ variable firstparam -1 firstparam !
 : (LDw,*)
  opr> >R
  opr@ reg.A = if opr>nul R> reg.(w) (LD(rr),A)' exit then
- ?16r if R> opr>r (LD(w),rr) exit then
+ ?16r if R> (LD(w),rr)' exit then
  R> abort" Invalid parameter" ;
 ----
 \ detect type of LD by its parameters
