@@ -4,8 +4,12 @@ Testing Z80 assembler
 decimal 2 capacity 1- thru
 
 ----
+: memcmp (S addr1 addr2 len -- )
+ ." pos: " 0 ?do I 1 u.r over @ over @ <> abort" differ"
+ 1+ swap 1+ swap ."  .. " loop ." match!" ;
+----
 \ LD binary 1/3
-hex CREATE (LD.bin) does>
+hex CREATE (LD.bin)
    \ (LDA,*) tests
    7F c, 78 c, 79 c, 7A c, 7B c, 7C c, 7D c, 7E c, 7E c, 0A c,
    0A c, 1A c, 1A c, 3A c, FF c, FF c, DD c, 7E c, 00 c, FD c,
@@ -46,8 +50,9 @@ hex CREATE (LD.bin) does>
    02 c, 02 c, 01 c, fe c, ff c, 11 c, fd c, ff c, 12 c, 12 c,
    21 c, fc c, ff c,
 ----
-variable (DEBUG) 1 (DEBUG) !
-variable LCOUNT -1 LCOUNT !
+variable (ld.bin).l  dp @ ' (ld.bin) - (ld.bin).l !
+variable (DEBUG)  1 (DEBUG) !
+variable LCOUNT  -1 LCOUNT !
 z80 also
 : ><  (DEBUG) @ if LCOUNT @ 3 u.r space .S ." /"
  opr# 1 u.r cr then LCOUNT @ 1+ LCOUNT ! ;
@@ -194,11 +199,14 @@ z/code (LD.assembled)
 >< ( FFF3 ) SP LD   \ (FFF3)  -> SP
 >< HL ( FFF2 ) LD   \ HL      -> (FFF2)
 >< BC ( FFF1 ) LD   \ BC      -> (FFF1)
->< DE ( FFF0 ) LD   \ DE      -> (FFF0)
->< IX ( FFEF ) LD   \ IX      -> (FFFF)
->< IY ( FFEE ) LD   \ IY      -> (FFFE)
->< SP ( FFED ) LD   \ SP      -> (FFFD)
->< HL       SP LD   \ HL      -> SP
->< IX       SP LD   \ IX      -> SL
->< IY       SP LD   \ IY      -> SL
+\ >< DE ( FFF0 ) LD   \ DE      -> (FFF0)
+\ >< IX ( FFEF ) LD   \ IX      -> (FFFF)
+\ >< IY ( FFEE ) LD   \ IY      -> (FFFE)
+\ >< SP ( FFED ) LD   \ SP      -> (FFFD)
+\ >< HL       SP LD   \ HL      -> SP
+\ >< IX       SP LD   \ IX      -> SL
+\ >< IY       SP LD   \ IY      -> SL
 z/end-code
+
+: test
+ ['] (LD.bin) >body ['] (LD.assembled) >body (LD.bin).l @ memcmp ;

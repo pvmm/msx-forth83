@@ -153,7 +153,7 @@ variable firstparam -1 firstparam !
 \ Consume and convert stack register into rr+index
 : opr>idx  opr> splitc ;
 
-\ Check if signed 8-bit value in 16-bit space
+\ Check if signed 8-bit value
 : ?8s  dup dup 7F <= swap -80 >= and ;
 
 \ Sum operator used on IX + i or i + IY
