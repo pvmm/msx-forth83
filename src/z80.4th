@@ -77,7 +77,7 @@ variable (DEBUG) 1 (DEBUG) !
 variable LCOUNT -1 LCOUNT !
 : ><
  LCOUNT @ 1+ LCOUNT !
- (DEBUG) @ if LCOUNT @ 3 u.r space .S ." /" opr# 1 u.r cr then ;
+ (DEBUG) @ if cr LCOUNT @ 3 u.r space .S ." / " opr# 1 u.r then ;
 ----
 variable start( 0 start( !
 variable address 0 address !
@@ -165,13 +165,14 @@ variable firstparam -1 firstparam !
  ?ixy not if abort" IX/IY register expected" then
  opr>r join >opr >I< ;
 ----
-\ opcode type
+\ opcode type (inherited from 8080)
 : 1MI  create C, does> C@ C, !reset ;
 : 2MI  create C, does> C@ (+) C, !reset ;
-: 3MI  create C, does> C@ (+) C, C, !reset ;
+: 3MI  create C, does> C@ swap 8* (+) C, !reset ;
 : 4MI  create C, does> C@ C, C, !reset ;
 : 5MI  create C, does> C@ C, , !reset ;
-: 6MI  create C, does> C@ (+) C, , !reset ;
+: 6MI  create C, does> C@ (+) C, C, !reset ;
+: 7MI  create C, does> C@ (+) C, , !reset ;
 ----
 \ opcodes 1/2
 \ r: 8 bit register
@@ -189,9 +190,10 @@ variable firstparam -1 firstparam !
 ----
 \ opcodes 2/2
 021 5MI (LDHL,w)      02A 5MI (LDHL,(w))   0F9 1MI (LDSP,HL)
-070 3MI (LD(IX+i),r)  076 6MI (LD(IX+i),b)
-002 2MI (LD(rr),A)    03A 5MI (LDA,(w))    001 6MI (LDrr,w)
-04B 6MI (LDrr,(w))    043 6MI (LD(w),rr)   022 5MI (LD(w),HL)
+070 6MI (LD(IX+i),r)  076 7MI (LD(IX+i),b) 
+002 2MI (LD(rr),A)    03A 5MI (LDA,(w))    001 7MI (LDrr,w)
+04B 7MI (LDrr,(w))    043 7MI (LD(w),rr)   022 5MI (LD(w),HL)
+004 3MI (INCr)        034 4MI (INC(IX+i))
 000 1MI (NOP)         0C1 2MI (POP)        0C5 2MI (PUSH)
 0C3 4MI JP
 ----
@@ -280,9 +282,12 @@ variable firstparam -1 firstparam !
 ----
 \ detect type of LD by its parameters
 : LD (S param1 param2 -- )
-  ?8r  if (LDr,*) exit then
-  ?idx if (LD(IX+i),*) exit then
-  ?16r if (LDrr,*) exit else (LDw,*) then ;
+ ?8r  if (LDr,*) exit then
+ ?idx if (LD(IX+i),*) exit then
+ ?16r if (LDrr,*) exit else (LDw,*) then ;
+----
+: INC (S reg -- )
+ ?idx if opr>idx C, (INC(IX+i)) else opr>r (INCr) then ;
 ----
 : next  >next JP ;
 ----
