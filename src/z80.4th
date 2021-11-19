@@ -95,26 +95,26 @@ variable firstparam -1 firstparam !
 : !reset  -1 firstparam ! ;
 ----
 \ 8 and 16 bit register identifiers
-000 constant reg.B      (S OPCODE+00 )
-001 constant reg.C      (S OPCODE+01 )
-002 constant reg.D      (S OPCODE+02 )
-003 constant reg.E      (S OPCODE+03 )
-004 constant reg.H      (S OPCODE+04 )
-005 constant reg.L      (S OPCODE+05 )
-006 constant reg.(HL)   (S OPCODE+06 )
-007 constant reg.A      (S OPCODE+07 )
-008 constant reg.BC     (S OPCODE+00 )
-010 constant reg.DE     (S OPCODE+10 )
-020 constant reg.HL     (S OPCODE+20 )
-030 constant reg.SP     (S OPCODE+30 )
-030 constant reg.AF     (S OPCODE+30 )
-0DD constant reg.IX     (S 0DD, OPCODE+20 )
-0FD constant reg.IY     (S 0FD, OPCODE+20 )
+000 constant reg.B      (S 8BIT OPCODE+00 )
+001 constant reg.C      (S 8BIT OPCODE+01 )
+002 constant reg.D      (S 8BIT OPCODE+02 )
+003 constant reg.E      (S 8BIT OPCODE+03 )
+004 constant reg.H      (S 8BIT OPCODE+04 )
+005 constant reg.L      (S 8BIT OPCODE+05 )
+006 constant reg.(HL)   (S 8BIT OPCODE+06 )
+007 constant reg.A      (S 8BIT OPCODE+07 )
+000 constant reg.BC     (S 16BIT OPCODE+00 )
+002 constant reg.DE     (S 16BIT OPCODE+02 )
+004 constant reg.HL     (S 16BIT OPCODE+04 )
+006 constant reg.SP     (S 16BIT OPCODE+06 )
+008 constant reg.AF     (S 16BIT OPCODE+08 )
+0DD constant reg.IX     (S 0DD, HL OPCODE )
+0FD constant reg.IY     (S 0FD, HL OPCODE )
 ----
 \ 8 and 16 bit register identifiers (cont)
-030 constant reg.(w)    (S OPCODE+30 )
-200 constant reg.(BC)   (S OPCODE+00 )
-210 constant reg.(DE)   (S OPCODE+10 )
+\ 030 constant reg.(w)    (S OPCODE+30 )
+\ 200 constant reg.(BC)   (S OPCODE+00 )
+\ 210 constant reg.(DE)   (S OPCODE+10 )
 ----
 \ registers as CODE parameters
 : A     >loc< reg.A        >opr >8R< ;
@@ -165,7 +165,7 @@ variable firstparam -1 firstparam !
  ?ixy not if abort" IX/IY register expected" then
  opr>r join >opr >I< ;
 ----
-\ opcode type (inherited from 8080)
+\ opcode type (inherited from 8080 and extended)
 : 1MI  create C, does> C@ C, !reset ;
 : 2MI  create C, does> C@ (+) C, !reset ;
 : 3MI  create C, does> C@ swap 8* (+) C, !reset ;
@@ -173,13 +173,15 @@ variable firstparam -1 firstparam !
 : 5MI  create C, does> C@ C, , !reset ;
 : 6MI  create C, does> C@ (+) C, C, !reset ;
 : 7MI  create C, does> C@ (+) C, , !reset ;
+: 8MI  create C, does> C@ swap 8* (+) C, C, C, !reset ;
+: 9MI  create C, does> C@ swap 8* (+) C, , !reset ;
 ----
 \ opcodes 1/2
 \ r: 8 bit register
 \ rr: 16 bit register
 \ b: 8 bit value
 \ w: 16 bit value
-078 2MI (LDA,r)       03E 4MI (LDA,b)      00A 2MI (LDA,(rr))
+078 2MI (LDA,r)       03E 4MI (LDA,b)      00A 3MI (LDA,(rr))
 07E 4MI (LDA,(IX+i))  040 2MI (LDB,r)      006 4MI (LDB,b)
 046 4MI (LDB,(IX+i))  048 2MI (LDC,r)      00E 4MI (LDC,b)
 04E 4MI (LDC,(IX+i))  050 2MI (LDD,r)      016 4MI (LDD,b)
@@ -191,9 +193,10 @@ variable firstparam -1 firstparam !
 \ opcodes 2/2
 021 5MI (LDHL,w)      02A 5MI (LDHL,(w))   0F9 1MI (LDSP,HL)
 070 6MI (LD(IX+i),r)  076 7MI (LD(IX+i),b) 
-002 2MI (LD(rr),A)    03A 5MI (LDA,(w))    001 7MI (LDrr,w)
-04B 7MI (LDrr,(w))    043 7MI (LD(w),rr)   022 5MI (LD(w),HL)
-004 3MI (INCr)        034 4MI (INC(IX+i))
+002 3MI (LD(rr),A)    03A 5MI (LDA,(w))    001 9MI (LDrr,w)
+04B 9MI (LDrr,(w))    043 9MI (LD(w),rr)   022 5MI (LD(w),HL)
+003 3MI (INCrr)       004 3MI (INCr)       034 4MI (INC(IX+i))
+00B 3MI (DECrr)       005 3MI (DECr)       035 4MI (DEC(IX+i))
 000 1MI (NOP)         0C1 2MI (POP)        0C5 2MI (PUSH)
 0C3 4MI JP
 ----
@@ -276,18 +279,26 @@ variable firstparam -1 firstparam !
  abort" 8-bit parameter expected" ;
 : (LDw,*)
  opr> >R
- opr@ reg.A = if opr>nul R> reg.(w) (LD(rr),A)' exit then
+ opr@ reg.A = if opr>nul R> 30 (LD(rr),A)' exit then
  ?16r if R> (LD(w),rr)' exit then
  R> abort" Invalid parameter" ;
 ----
 \ detect type of LD by its parameters
-: LD (S param1 param2 -- )
+: LD (S reg|addr reg|addr|value -- )
  ?8r  if (LDr,*) exit then
  ?idx if (LD(IX+i),*) exit then
  ?16r if (LDrr,*) exit else (LDw,*) then ;
 ----
 : INC (S reg -- )
- ?idx if opr>idx C, (INC(IX+i)) else opr>r (INCr) then ;
+ ?idx if opr>idx C, (INC(IX+i)) exit then
+ ?8r  if opr>r (INCr) exit then
+ ?ixy if opr>r C, reg.HL (INCrr) exit then
+ ?16r if opr>r (INCrr) else abort" Invalid parameter" then ;
+: DEC (S reg -- )
+ ?idx if opr>idx C, (DEC(IX+i)) exit then
+ ?8r  if opr>r (DECr) exit then
+ ?ixy if opr>r C, reg.HL (DECrr) exit then
+ ?16r if opr>r (DECrr) else abort" Invalid parameter" then ;
 ----
 : next  >next JP ;
 ----
