@@ -6,6 +6,7 @@ decimal 2 capacity 1- thru
 ----
 z80 definitions hex
 
+\ compare two memory addresses
 : memcmp (S addr1 addr2 len -- )
  ." comparing " 0 ?do over @ over @ <> if
    ." address:" 1+ 5 u.r ."  differ, I=" I 1+ 0 u.r true abort
@@ -14,11 +15,11 @@ z80 definitions hex
 \ overwrite ED editor with hex number 0ED
 0ed constant #d
 ----
-\ LD.b 1/4
-CREATE (LD.b)
+\ (bin) 1/4
+CREATE (bin)
 \ (LDA,*)
  7F c, 78 c, 79 c, 7A c, 7B c, 7C c, 7D c, 7E c, 7E c, 0A c,
- 0A c, 1A C, 1A C, 3A c, FF c, FF c, DD c, 7E c, 00 c, FD c,
+ 0A c, 1A c, 1A c, 3A c, FF c, FF c, DD c, 7E c, 00 c, FD c,
  7E c, 01 c, 3E c, 01 c,
 \ (LDB,*) tests (24)
  47 c, 40 c, 41 c, 42 c, 43 c, 44 c, 45 c, 46 c, 46 c, DD c,
@@ -27,7 +28,7 @@ CREATE (LD.b)
  4F c, 48 c, 49 c, 4A c, 4B c, 4C c, 4D c, 4E c, 4E c, DD c,
  4E c, 04 c, FD c, 4E c, 05 c, 0E c, 03 c,
 ----
-\ LD.b 2/4
+\ (bin) 2/4
 \ (LDD,*)
  57 c, 50 c, 51 c, 52 c, 53 c, 54 c, 55 c, 56 c, 56 c, DD c,
  56 c, 06 c, FD c, 56 c, 07 c, 16 c, 04 c,
@@ -41,7 +42,7 @@ CREATE (LD.b)
  6F c, 68 c, 69 c, 6A c, 6B c, 6C c, 6D c, 6E c, 6E c, DD c,
  6E c, 0C c, FD c, 6E c, 0D c, 2E c, 07 c,
 ----
-\ LD.b 3/4
+\ (bin) 3/4
 \ (LD(HL),*)
  77 c, 70 c, 71 c, 72 c, 73 c, 74 c, 75 c, 36 c, 08 c,
 \ (LD(IX+i),*)
@@ -58,25 +59,31 @@ CREATE (LD.b)
  fd c, 21 c, f9 c, ff c, 2a c, f8 c, ff c, #d c, 4b c, f7 c,
  ff c, #d c, 5b c, f6 c, ff c, dd c, 2a c, f5 c, ff c, fd c,
 ----
-\ LD.b 4/4
+\ (bin) 4/4
  2a c, f4 c, ff c, #d c, 7b c, f3 c, ff c,
 \ (LDw,rr)
- 22 c, f2 c, ff C,
+ 22 c, f2 c, ff c,
  #d c, 43 c, F1 c, FF c, #d c, 53 c, F0 c, FF c, DD c, 22 c,
  EF c, FF c, FD c, 22 c, EE c, FF c, #d c, 73 c, #d c, FF c,
  F9 c, DD c, F9 c, FD c, F9 c,
 \ INC tests
  3c c, 04 c, 0c c, 14 c, 1c c, 24 c, 2c c, 34 c, dd c, 34 c,
- 01 c, fd c, 34 c, 02 c, 03 c, 13 C, 23 c, 33 c, dd c, 23 c,
+ 01 c, fd c, 34 c, 02 c, 03 c, 13 c, 23 c, 33 c, dd c, 23 c,
  fd c, 23 c,
 \ DEC tests
  3d c, 05 c, 0d c, 15 c, 1d c, 25 c, 2d c, 35 c, dd c, 35 c,
  03 c, fd c, 35 c, 04 c, 0b c, 1b c, 2b c, 3b c, dd c, 2b c,
  fd c, 2b c,
-here 1- ' (ld.b) >body - constant (ld.b).l \ calculate size
+----
+\ ADD tests
+ 87 c, 80 c, 81 c, 82 c, 83 c, 84 c, 85 c, 86 c, 86 c, dd c,
+ 86 c, 01 c, fd c, 86 c, 02 c, 09 c, 19 c, 29 c, 39 c, dd C,
+ 09 c, dd c, 19 c, dd c, 29 c, dd c, 39 c, fd c, 09 c, fd c,
+ 19 c, fd c, 29 c, fd c, 39 c,
+here 1- ' (bin) >body - constant (bin).l \ calculate size
 ----
 \ Testing all LoaD opcodes
-hex z/code (LD.a)
+hex z/code (as)
 ----
  A        A  LD   \ A        -> A
  B        A  LD   \ B        -> A
@@ -258,8 +265,32 @@ hex z/code (LD.a)
  SP         DEC   \ SP-1     -> SP
  IX         DEC   \ IX-1     -> IX
  IY         DEC   \ IY-1     -> IY
+ A       A  ADD
+ B       A  ADD
+ C       A  ADD
+ D       A  ADD
+ E       A  ADD
+----
+>< H       A  ADD
+>< L       A  ADD
+>< HL      A  ADD
+>< (HL)    A  ADD
+>< IX 1 +  A  ADD
+>< 2 IY +  A  ADD
+>< BC     HL  ADD
+>< DE     HL  ADD
+>< HL     HL  ADD
+>< SP     HL  ADD
+>< BC     IX  ADD \ *
+>< DE     IX  ADD
+>< IX     IX  ADD
+>< SP     IX  ADD \ *
+>< BC     IY  ADD
+>< DE     IY  ADD
+----
+>< IY     IY  ADD
+>< SP     IY  ADD
 z/end-code
-
 ----
 : test-z80
- ['] (LD.b) >body ['] (LD.a) >body (LD.b).l memcmp ;
+ ['] (bin) >body ['] (as) >body (bin).l memcmp ;

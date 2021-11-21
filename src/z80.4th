@@ -197,6 +197,7 @@ variable firstparam -1 firstparam !
 04B 9MI (LDrr,(w))    043 9MI (LD(w),rr)   022 5MI (LD(w),HL)
 003 3MI (INCrr)       004 3MI (INCr)       034 4MI (INC(IX+i))
 00B 3MI (DECrr)       005 3MI (DECr)       035 4MI (DEC(IX+i))
+080 2MI (ADDA,r)      0C6 4MI (ADDA,b)     009 3MI (ADDHL,BC)
 000 1MI (NOP)         0C1 2MI (POP)        0C5 2MI (PUSH)
 0C3 4MI JP
 ----
@@ -299,6 +300,23 @@ variable firstparam -1 firstparam !
  ?8r  if opr>r (DECr) exit then
  ?ixy if opr>r C, reg.HL (DECrr) exit then
  ?16r if opr>r (DECrr) else abort" Invalid parameter" then ;
+----
+: (ADDA,*)
+ ?8r  if opr>r (ADDA,r) exit then
+ opr@ reg.HL = if opr>nul reg.(HL) (ADDA,r) exit then
+ ?idx if opr>idx C, reg.(HL) (ADDA,r) C, exit then
+ ?8s not abort" Invalid parameter" 40 (ADDA,r) ;
+: (ADDHL,*)
+ ?16r not abort" Invalid parameter" opr>r (ADDHL,BC) ;
+: (ADDIX,*) ." =>"
+ >R ?16r not abort" Invalid parameter"
+ ?ixy if opr>r R> over <> abort" Invalid parameter" C, reg.HL
+         (ADDHL,BC) else R> C, opr>r (ADDHL,BC) then ;
+: ADD (S reg|idx -- )
+ ?r if opr@ reg.A  = if opr>nul (ADDA,*) exit then
+       opr@ reg.HL = if opr>nul (ADDHL,*) exit then
+       ?ixy if opr>r (ADDIX,*) exit then then
+ true abort" Invalid parameter" ;
 ----
 : next  >next JP ;
 ----
