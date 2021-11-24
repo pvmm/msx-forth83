@@ -1,4 +1,4 @@
-set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk vtx1.blk vgr1.blk z80.blk]
+set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk vtx1.blk vgr1.blk z80.blk t-z80.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -67,7 +67,7 @@ proc compile {} {
   set path [lindex $blk_files 0]
   set filename [string toupper [string range $path [expr {[string last "/" $path] + 1}] end]]
   message "Compiling $filename..."
-  type! "OK" "OK  ok" summarize
+  type! "OK" "  ok" summarize
 }
 
 proc summarize {} {
