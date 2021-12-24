@@ -1,4 +1,4 @@
-set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk vtx1.blk vgr1.blk z80.blk t-z80.blk]
+set blk_files [list shift.blk msxbios.blk vt52.blk grp.blk debug.blk psg.blk vtx1.blk vgr1.blk case.blk t-case.blk]
 
 #
 # Wait for boot message "BOOT COMPLETED"
@@ -119,10 +119,19 @@ set save_settings_on_exit off
 set fullspeedwhenloading on
 set speed 9999
 
+proc reset_speed {} {
+  global speed
+
+  message "$::wp_last_value received"
+  if {$::wp_last_value == 95} {
+    set speed 100
+  }
+}
+
 # Debug
-#ext debugdevice
+ext debugdevice
 #set debugoutput stdout
-#debug set_watchpoint write_io {0x2f} {} {message "$::wp_last_value received from debugdevice"}
+debug set_watchpoint write_io {0x2e} {} {reset_speed}
 
 message "Detecting boot..."
 wait_boot call_forth83
